@@ -5,7 +5,10 @@ type PackageOptions = {
     /** Test files to run; defaults to the `tests/` directory. */
     include?: string[];
     /** Overrides merged into the `coverage` block (e.g. extra `exclude`). */
-    coverage?: Record<string, unknown>;
+    coverage?: {
+        exclude?: string[];
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -37,7 +40,19 @@ export function definePackageConfig(options: PackageOptions) {
                 provider: "v8",
                 include: ["src/**/*.ts"],
                 reporter: ["text", "html", "json-summary"],
+                // Pure-reexport entrypoints can't be observed by V8's coverage
+                // instrumentation: `export { … } from` compiles to no executable
+                // lines, so a file that only re-exports reports 0% even when every
+                // re-exported symbol is exercised by tests. The symbols remain
+                // fully covered at their origin modules. Append (don't replace)
+                // any excludes the consumer passed in via options.coverage.
                 ...options.coverage,
+                exclude: [
+                    "**/index.ts",
+                    "tests/**",
+                    "node_modules/**",
+                    ...(options.coverage?.exclude ?? []),
+                ],
             },
         },
     });
