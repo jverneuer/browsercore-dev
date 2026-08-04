@@ -1,10 +1,25 @@
 import { defineConfig } from "vitest/config";
 
+/**
+ * Options for configuring a package's vitest setup.
+ *
+ * @since 0.1.0
+ */
 type PackageOptions = {
+    /** Display name for the test run (shown in reporters). */
     name: string;
-    /** Test files to run; defaults to the `tests/` directory. */
+    /**
+     * Test files to run.
+     *
+     * @defaultValue `["tests/**/*.test.ts"]`
+     */
     include?: string[];
-    /** Overrides merged into the `coverage` block (e.g. extra `exclude`). */
+    /**
+     * Overrides merged into the `coverage` block.
+     *
+     * Use this to add extra `exclude` patterns — they are appended to the
+     * default excludes (`**/index.ts`, `tests/**`, `node_modules/**`).
+     */
     coverage?: {
         exclude?: string[];
         [key: string]: unknown;
@@ -19,12 +34,29 @@ type PackageOptions = {
  * `json-summary` — the last is what the coverage gate reads), the same v8
  * coverage over `src/` (all `.ts` files), the same 30s timeouts, and `globals: false`.
  *
- * Consumers opt in with just their name:
+ * @param options Configuration options for the package.
+ * @param options.name      Display name for the test run.
+ * @param options.include   Glob patterns for test files.
+ * @param options.coverage  Optional coverage overrides.
+ * @returns A fully-formed vitest config object.
  *
+ * @example
  * ```ts
+ * // vitest.config.ts in a @browsercore/* package
  * import { definePackageConfig } from "@browsercore/dev/vitest";
  * export default definePackageConfig({ name: "crypto" });
  * ```
+ *
+ * @example
+ * ```ts
+ * // With custom coverage excludes
+ * export default definePackageConfig({
+ *   name: "tls",
+ *   coverage: { exclude: ["**/handshake-driver.ts"] }
+ * });
+ * ```
+ *
+ * @since 0.1.0
  */
 export function definePackageConfig(options: PackageOptions) {
     return defineConfig({

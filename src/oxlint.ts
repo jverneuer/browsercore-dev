@@ -3,18 +3,28 @@ import type { OxlintConfig } from "oxlint";
 /**
  * Base oxlint config shared by every @browsercore/* package.
  *
- * Consumers extend it in an `oxlint.config.ts` (which replaces `.oxlintrc.json`):
+ * Consumers extend it in an `oxlint.config.ts` (which replaces `.oxlintrc.json`).
  *
+ * @remarks
+ * Why a TS import rather than `.oxlintrc.json` `extends`: oxlint's JSON
+ * `extends` resolves only relative file paths, not `node_modules` (see
+ * oxc-project/oxc#15538). The `oxlint.config.ts` form imports the config object
+ * directly, which does resolve through `node_modules`.
+ *
+ * @example
  * ```ts
+ * // oxlint.config.ts in a @browsercore/* package
  * import { defineConfig } from "oxlint";
  * import base from "@browsercore/dev/oxlint";
  * export default defineConfig({ extends: [base] });
  * ```
  *
- * Why a TS import rather than `.oxlintrc.json` `extends`: oxlint's JSON
- * `extends` resolves only relative file paths, not `node_modules` (see
- * oxc-project/oxc#15538). The `oxlint.config.ts` form imports the config object
- * directly, which does resolve through `node_modules`.
+ * @defaultValue
+ * Enables `typescript`, `unicorn`, `import`, `promise`, and `node` plugins with
+ * `correctness`, `suspicious`, and `pedantic` set to `"error"`.
+ *
+ * @see {@link https://oxc.rs/docs/guide/linting/ oxlint documentation}
+ * @since 0.1.0
  */
 const base: OxlintConfig = {
     plugins: ["typescript", "unicorn", "import", "promise", "node"],
