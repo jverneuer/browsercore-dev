@@ -104,6 +104,38 @@ describe("renderCoverageMarkdown", () => {
         const md = renderCoverageMarkdown(makeSummary(), []);
         expect(md).not.toContain("| `src/");
     });
+
+    it("renders a file with partial (non-round) percentages", () => {
+        const md = renderCoverageMarkdown(makeSummary(), [
+            {
+                file: "src/coverage-md.ts",
+                m: {
+                    statements: { total: 21, covered: 19, pct: 90.4 },
+                    branches: { total: 6, covered: 5, pct: 83.3 },
+                    functions: { total: 9, covered: 9, pct: 100 },
+                    lines: { total: 14, covered: 13, pct: 92.8 },
+                },
+            },
+        ]);
+        expect(md).toContain("90.4% (19/21)");
+        expect(md).toContain("83.3% (5/6)");
+        expect(md).toContain("100% (9/9)");
+        expect(md).toContain("92.8% (13/14)");
+    });
+
+    it("always emits a trailing newline after the per-file table", () => {
+        const md = renderCoverageMarkdown(makeSummary(), [
+            { file: "src/a.ts", m: makeSummary().total },
+        ]);
+        expect(md.endsWith("\n")).toBe(true);
+    });
+
+    it("puts the Total section before the Per-file section", () => {
+        const md = renderCoverageMarkdown(makeSummary(), [
+            { file: "src/a.ts", m: makeSummary().total },
+        ]);
+        expect(md.indexOf("## Total")).toBeLessThan(md.indexOf("## Per-file"));
+    });
 });
 
 describe("renderBadge", () => {
