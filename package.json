@@ -1,6 +1,6 @@
 {
   "name": "@browsercore/dev",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shared build/lint/test config and governance for the @browsercore/* packages.",
   "license": "MIT",
   "repository": {
