@@ -64,13 +64,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # coverage/ is gitignored; force-add the generated report + badge
-          # so they are tracked in the repo root.
           git add -f COVERAGE.md coverage/badge.json
           if git diff --cached --quiet; then
             echo "coverage report unchanged — nothing to commit"
           else
             git commit -m "ci: update coverage report [skip ci]"
-            git push
+            # Push to the unprotected coverage branch (main is locked)
+            git push origin HEAD:coverage --force-with-lease
           fi
 
       - name: Publish to npm
