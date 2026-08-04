@@ -1,76 +1,86 @@
 # @browsercore/dev
 
-Shared build, lint, test, and governance config for the `@browsercore/*` package
-family (14 sibling git repos cloned side-by-side). One published package is the
-single source of truth; consumers eat the extendable parts live via npm, and the
-non-extendable GitHub files arrive via a sync script.
+[![npm version](https://img.shields.io/npm/v/@browsercore/dev.svg)](https://www.npmjs.com/package/@browsercore/dev)
+[![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jverneuer/browsercore-dev/main/coverage/badge.json)](https://github.com/jverneuer/browsercore-dev/blob/main/COVERAGE.md)
+[![license](https://img.shields.io/npm/l/@browsercore/dev.svg)](LICENSE)
 
-## What's distributed, and how
+Shared build, lint, test, and coverage tooling for every `@browsercore/*` package. One published package is the single source of truth; consumers extend it live via npm.
 
-| Artifact | Mechanism |
-| --- | --- |
-| `tsconfig` strict flags | `tsconfig.json` `"extends": "@browsercore/dev/tsconfig.base.json"` |
-| `vitest` config | factory import: `definePackageConfig({ name })` from `@browsercore/dev/vitest` |
-| `.oxlintrc.json` → `oxlint.config.ts` | import the base object from `@browsercore/dev/oxlint` |
-| `coverage-md` (coverage report generator) | npm `bin` |
-| `CODING_STANDARDS.md`, `.github/{ci.yml,ruleset.json,bootstrap-ruleset.sh}` | `scripts/sync.mjs` (GitHub reads only each repo's own `.github/`) |
-
-Why a TS import for oxlint rather than `.oxlintrc.json` `extends`: oxlint's JSON
-`extends` resolves only relative file paths, not `node_modules`
-(see oxc-project/oxc#15538). The `oxlint.config.ts` form imports the config object
-directly, which resolves through `node_modules`.
-
-## Consumer adoption (per repo)
+## Install
 
 ```sh
-# 1. depend on it (use the npm version once published; locally: file:../dev)
 npm install -D @browsercore/dev
-
-# 2. tsconfig.json — replace with:
-#    { "extends": "@browsercore/dev/tsconfig.base.json",
-#      "compilerOptions": { "rootDir": "src", "outDir": "dist" },
-#      "include": ["src/**/*.ts"], "exclude": ["node_modules","dist","tests","scripts"] }
-
-# 3. vitest.config.ts — replace with:
-#    import { definePackageConfig } from "@browsercore/dev/vitest";
-#    export default definePackageConfig({ name: "<pkg>" });
-
-# 4. oxlint — delete .oxlintrc.json, create oxlint.config.ts:
-#    import { defineConfig } from "oxlint";
-#    import base from "@browsercore/dev/oxlint";
-#    export default defineConfig({ extends: [base] });
-
-# 5. drop scripts/coverage-md.mjs; CI uses the `coverage-md` bin.
-
-# 6. refresh governance files (run from THIS repo):
-node scripts/sync.mjs <pkg>          # copy templates in
-node scripts/sync.mjs --check <pkg>  # drift gate (exit 1 on mismatch)
 ```
 
-Type-aware oxlint (`--type-aware`) requires the `oxlint-tsgolint` package in the
-consumer's devDependencies.
+## Usage
 
-## Repo layout
+### tsconfig
 
-```
-src/vitest.ts            definePackageConfig() factory
-src/oxlint.ts            base OxlintConfig object (default export)
-src/index.ts             re-exports
-bin/coverage-md.mjs      coverage-md bin
-scripts/sync.mjs         distribute + drift-check governance files
-tsconfig.base.json       universal compilerOptions (consumers extend this)
-tsconfig.build.base.json emit flags layered on the base
-templates/.github/*      ci.yml, ruleset.json, bootstrap-ruleset.sh (synced, not published)
-CODING_STANDARDS.md      synced to every consumer
+```json
+{
+  "extends": "@browsercore/dev/tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
 ```
 
-## Develop
+For builds that emit declarations, extend `@browsercore/dev/tsconfig.build.base.json` instead (layers `declaration`, `declarationMap`, `sourceMap` on top of the base).
+
+### vitest
+
+```ts
+import { definePackageConfig } from "@browsercore/dev/vitest";
+
+export default definePackageConfig({ name: "<pkg>" });
+```
+
+`definePackageConfig` wires in the shared reporters (`text`, `html`, `json-summary`), v8 coverage over `src/**/*.ts`, and 30s test/hook timeouts. The `html` + `json-summary` artifacts are what the coverage report reads. Pass `{ include, coverage }` to override test globs or append coverage excludes.
+
+### oxlint
+
+oxlint's JSON `extends` only resolves relative file paths (not `node_modules`), so the base is consumed via a TS import:
+
+```ts
+import { defineConfig } from "oxlint";
+import base from "@browsercore/dev/oxlint";
+
+export default defineConfig({ extends: [base] });
+```
+
+Type-aware linting (`--type-aware`) requires `oxlint-tsgolint` in the consumer's devDependencies.
+
+### coverage-md
+
+After running vitest with coverage, generate a `COVERAGE.md` report + shields.io badge:
 
 ```sh
-npm install
-npm run typecheck
-npm run build
-npm run lint -- --deny-warnings
+npx vitest run --coverage
+npx coverage-md
 ```
 
-Node >= 26. ESM only.
+The bin reads `coverage/coverage-summary.json` (written by the `json-summary` reporter) and writes `COVERAGE.md` and `coverage/badge.json` to the package root.
+
+## Scripts
+
+| Command | Runs |
+| --- | --- |
+| `npm run typecheck` | `tsc -p tsconfig.json --noEmit` |
+| `npm run lint` | `oxlint --type-aware src/` |
+| `npm test` | `vitest run` |
+| `npm run build` | `tsc -p tsconfig.build.json` |
+
+## Coverage report
+
+To produce a coverage report:
+
+```sh
+npx vitest run --coverage
+node scripts/coverage-md.mjs    # writes COVERAGE.md + coverage/badge.json
+```
+
+Provider is `@vitest/coverage-v8`. The report is generated from `coverage/coverage-summary.json`.
+
+## License
+
+MIT
