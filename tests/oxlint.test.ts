@@ -72,4 +72,20 @@ describe("oxlintBase", () => {
     it("ignores dist, coverage, node_modules, and config files", () => {
         expect(oxlintBase.ignorePatterns).toEqual(["dist", "coverage", "node_modules", "*.config.js"]);
     });
+
+    it("disables unicorn/no-array-reduce and unicorn/no-array-sort (used by consumers)", () => {
+        expect(oxlintBase.rules?.["unicorn/no-array-reduce"]).toBe("off");
+        expect(oxlintBase.rules?.["unicorn/no-array-sort"]).toBe("off");
+    });
+
+    it("enables import cycle/self-import/duplicates detection", () => {
+        expect(oxlintBase.rules?.["import/no-cycle"]).toBe("error");
+        expect(oxlintBase.rules?.["import/no-self-import"]).toBe("error");
+        expect(oxlintBase.rules?.["import/no-duplicates"]).toBe("error");
+    });
+
+    it("enables promise rules (no-return-wrap error, no-nesting warn)", () => {
+        expect(oxlintBase.rules?.["promise/no-return-wrap"]).toBe("error");
+        expect(oxlintBase.rules?.["promise/no-nesting"]).toBe("warn");
+    });
 });

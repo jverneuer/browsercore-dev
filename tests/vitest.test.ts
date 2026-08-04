@@ -86,4 +86,45 @@ describe("definePackageConfig", () => {
         const config = definePackageConfig({ name: "@browsercore/http2" });
         expect(config.test?.name).toBe("@browsercore/http2");
     });
+
+    it("defaults exclude to the three protected glob patterns in order", () => {
+        const config = definePackageConfig({ name: "crypto" });
+        const coverage = config.test?.coverage as { exclude?: string[] };
+        expect(coverage.exclude).toEqual(["**/index.ts", "tests/**", "node_modules/**"]);
+    });
+
+    it("appends user coverage.exclude AFTER the protected defaults", () => {
+        const config = definePackageConfig({
+            name: "crypto",
+            coverage: { exclude: ["scripts/**", "bin/**"] },
+        });
+        const coverage = config.test?.coverage as { exclude?: string[] };
+        expect(coverage.exclude).toEqual([
+            "**/index.ts",
+            "tests/**",
+            "node_modules/**",
+            "scripts/**",
+            "bin/**",
+        ]);
+    });
+
+    it("forwards arbitrary coverage override keys through spread", () => {
+        const config = definePackageConfig({
+            name: "crypto",
+            coverage: { statementsThreshold: 94, branchesThreshold: 80 },
+        });
+        const coverage = config.test?.coverage as { statementsThreshold?: number; branchesThreshold?: number };
+        expect(coverage.statementsThreshold).toBe(94);
+        expect(coverage.branchesThreshold).toBe(80);
+        // defaults are still wired in
+        expect(coverage.provider).toBe("v8");
+    });
+
+    it("returns a config serializable to JSON (matches what vitest consumes)", () => {
+        const config = definePackageConfig({ name: "crypto" });
+        const roundtrip = JSON.parse(JSON.stringify(config));
+        expect(roundtrip.test?.name).toBe("crypto");
+        expect(roundtrip.test?.coverage?.provider).toBe("v8");
+        expect(roundtrip.test?.include).toEqual(["tests/**/*.test.ts"]);
+    });
 });
