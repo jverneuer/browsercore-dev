@@ -1,7 +1,16 @@
 {
   "name": "@browsercore/dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared build/lint/test config and governance for the @browsercore/* packages.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jverneuer/browsercore-dev.git"
+  },
+  "homepage": "https://github.com/jverneuer/browsercore-dev#readme",
+  "bugs": {
+    "url": "https://github.com/jverneuer/browsercore-dev/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,7 +40,8 @@
     "bin",
     "tsconfig.base.json",
     "tsconfig.build.base.json",
-    "CODING_STANDARDS.md"
+    "CODING_STANDARDS.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=26.0.0"
