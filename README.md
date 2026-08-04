@@ -1,6 +1,5 @@
 # @browsercore/dev
 
-
 Shared build, lint, test, and governance config for the `@browsercore/*` package
 family (14 sibling git repos cloned side-by-side). One published package is the
 single source of truth; consumers eat the extendable parts live via npm, and the
