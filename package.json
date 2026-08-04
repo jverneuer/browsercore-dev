@@ -1,7 +1,7 @@
 {
   "name": "@browsercore/dev",
   "version": "0.1.2",
-  "description": "Shared build/lint/test config and governance for the @browsercore/* packages.",
+  "description": "Shared build, lint, test, and coverage tooling for the @browsercore/* packages.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -51,7 +51,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "lint": "oxlint --type-aware src/",
-    "sync": "node scripts/sync.mjs",
     "clean": "rm -rf dist coverage",
     "prepublishOnly": "npm run clean && npm run build"
   },
