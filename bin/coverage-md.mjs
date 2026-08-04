@@ -56,8 +56,6 @@ const fileEntries = Object.entries(data)
     })
     .sort((a, b) => a.file.localeCompare(b.file));
 
-const pad = (s, n) => s + " ".repeat(Math.max(0, n - s.length));
-
 const lines = [];
 lines.push(`# Coverage report`);
 lines.push("");

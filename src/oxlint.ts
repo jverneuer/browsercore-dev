@@ -55,6 +55,9 @@ const base: OxlintConfig = {
         "unicorn/no-array-reduce": "off",
         "unicorn/no-process-exit": "error",
         "unicorn/no-array-sort": "off",
+        // Transport extends node:EventEmitter — its .emit()/.on() contract is the
+        // wire-level primitive; EventTarget is not a behavioral substitute.
+        "unicorn/prefer-event-target": "off",
         "no-inline-comments": "off",
         "max-lines": "off",
         "max-lines-per-function": "off",
