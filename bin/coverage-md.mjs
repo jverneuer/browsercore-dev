@@ -17,7 +17,7 @@ import { join, relative } from "node:path";
 const pkgRoot = process.cwd();
 const summaryPath = join(pkgRoot, "coverage", "coverage-summary.json");
 const outPath = join(pkgRoot, "COVERAGE.md");
-const badgePath = join(pkgRoot, "coverage", "badge.json");
+const badgePath = join(pkgRoot, ".github", "coverage-badge.json");
 
 /** @type {Record<string, { lines:{total:number,covered:number,pct:number}, statements:{total:number,covered:number,pct:number}, functions:{total:number,covered:number,pct:number}, branches:{total:number,covered:number,pct:number} }>} */
 let data;
