@@ -33,6 +33,21 @@ jobs:
 
       - run: npm install
 
+      - name: Enforce .gitignore rules
+        run: |
+          VIOLATIONS=""
+          for f in package-lock.json coverage/; do
+            if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+              VIOLATIONS="$VIOLATIONS $f"
+            fi
+          done
+          if [ -n "$VIOLATIONS" ]; then
+            echo "ERROR: Disallowed files are tracked in git:$VIOLATIONS"
+            echo "These must be gitignored. See @browsercore/dev for canonical .gitignore rules."
+            exit 1
+          fi
+          echo "No disallowed tracked files: OK"
+
       - run: npm run typecheck
       - run: npm run lint -- --deny-warnings
       - run: npm test -- --coverage
