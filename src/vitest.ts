@@ -11,14 +11,14 @@ type PackageOptions = {
     /**
      * Test files to run.
      *
-     * @defaultValue `["tests/**/*.test.ts"]`
+     * @defaultValue <code>["tests&#47;**&#47;*.test.ts"]</code>
      */
     include?: string[];
     /**
-     * Overrides merged into the `coverage` block.
+     * Overrides merged into the <code>coverage</code> block.
      *
-     * Use this to add extra `exclude` patterns — they are appended to the
-     * default excludes (`**/index.ts`, `tests/**`, `node_modules/**`).
+     * Use this to add extra <code>exclude</code> patterns — they are appended to the
+     * default excludes (<code>**&#47;index.ts</code>, <code>tests&#47;**</code>, <code>node_modules&#47;**</code>).
      */
     coverage?: {
         exclude?: string[];
@@ -52,7 +52,7 @@ type PackageOptions = {
  * // With custom coverage excludes
  * export default definePackageConfig({
  *   name: "tls",
- *   coverage: { exclude: ["**/handshake-driver.ts"] }
+ *   coverage: { exclude: ["**&#47;handshake-driver.ts"] }
  * });
  * ```
  *
@@ -73,7 +73,7 @@ export function definePackageConfig(options: PackageOptions) {
                 include: ["src/**/*.ts"],
                 reporter: ["text", "html", "json-summary"],
                 // Pure-reexport entrypoints can't be observed by V8's coverage
-                // instrumentation: `export { … } from` compiles to no executable
+                // instrumentation: 'export { … } from' compiles to no executable
                 // lines, so a file that only re-exports reports 0% even when every
                 // re-exported symbol is exercised by tests. The symbols remain
                 // fully covered at their origin modules. Append (don't replace)
