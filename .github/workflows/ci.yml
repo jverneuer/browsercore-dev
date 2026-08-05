@@ -1,37 +1,44 @@
-name: CI (reusable)
+name: CI
 
 on:
-  workflow_call:
-    inputs:
-      node-version:
-        description: "Node version to use"
-        default: "26"
-        required: false
-        type: string
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build-and-publish:
+  test:
     runs-on: ubuntu-latest
-    environment: CI
     permissions:
       contents: write
-      id-token: write
-    outputs:
-      version: ${{ steps.version.outputs.current }}
-      changed: ${{ steps.version.outputs.changed }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: 26
           registry-url: https://registry.npmjs.org
 
       - run: npm install
+
+      - name: Enforce no console.log in src/
+        run: |
+          VIOLATIONS=$(grep -rnE 'console\.(log|warn|error)\(' src/ \
+            | grep -v '^\s*//' \
+            | grep -v '^\s*\*' \
+            | grep -v '^\s*/\*' \
+            | grep -v 'eslint-disable' \
+            | grep -v 'oxlint-disable' \
+            || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "ERROR: console.log/warn/error found in src/. Use injected Logger instead."
+            echo "$VIOLATIONS"
+            exit 1
+          fi
+          echo "No console.log in src/: OK"
 
       - run: npm run typecheck
       - run: npm run lint -- --deny-warnings
@@ -51,33 +58,10 @@ jobs:
             for (const [k,p] of failed) console.error('  '+k+' '+p+'% < '+min+'%');
             process.exit(1);
           }
-          console.log('Coverage OK — statements '+s+'%, branches '+b+'%, functions '+f+'%, lines '+l+'% >= '+min+'%');
+          console.log('Coverage OK');
           "
 
-      - name: Generate COVERAGE.md + badge
-        run: npx coverage-md
-
       - run: npm run build
-
-      - name: Detect version change
-        id: version
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          CURRENT=$(node -p "require('./package.json').version")
-          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-          PARENT=$(git rev-parse --short HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PARENT" ]; then
-            CHANGED="true"
-          else
-            PREVIOUS=$(git show "$PARENT:package.json" 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "")
-            if [ "$CURRENT" != "$PREVIOUS" ]; then
-              CHANGED="true"
-            else
-              CHANGED="false"
-            fi
-          fi
-          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
-          echo "Version $CURRENT (previous: ${PREVIOUS:-<none>}) — changed: $CHANGED"
 
       - name: Commit coverage badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -88,34 +72,4 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git commit -m "ci: update coverage badge [skip ci]"
             git push origin HEAD:main
-          else
-            echo "coverage report unchanged — nothing to commit"
           fi
-
-      - name: Publish to npm
-        if: steps.version.outputs.changed == 'true'
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          NAME=$(node -p "require('./package.json').name")
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "$NAME@$VERSION already on npm — skipping publish"
-            exit 0
-          fi
-          npm publish --access public --provenance
-
-      - name: Create git tag and GitHub Release
-        if: steps.version.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "tag $TAG already exists — skipping release"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG"
-          git push origin "$TAG"
-          gh release create "$TAG" --title "$TAG" --generate-notes
