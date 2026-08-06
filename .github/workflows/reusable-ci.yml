@@ -98,7 +98,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git commit -m "ci: update coverage badge [skip ci]"
-            git push origin HEAD:main
+            git push origin HEAD:coverage --force
           else
             echo "coverage report unchanged — nothing to commit"
           fi
