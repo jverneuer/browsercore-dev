@@ -8,6 +8,11 @@ on:
         default: "26"
         required: false
         type: string
+      deploy-pages:
+        description: "Deploy coverage badge to GitHub Pages"
+        default: false
+        required: false
+        type: boolean
 
 jobs:
   build-and-publish:
