@@ -79,6 +79,26 @@ jobs:
 
       - run: npm run build
 
+      - name: Detect version change
+        id: version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          PARENT=$(git rev-parse --short HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PARENT" ]; then
+            CHANGED="true"
+          else
+            PREVIOUS=$(git show "$PARENT:package.json" 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "")
+            if [ "$CURRENT" != "$PREVIOUS" ]; then
+              CHANGED="true"
+            else
+              CHANGED="false"
+            fi
+          fi
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Version $CURRENT (previous: ${PREVIOUS:-<none>}) — changed: $CHANGED"
+
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
         run: |
