@@ -54,6 +54,9 @@
         "clean": "rm -rf dist coverage",
         "prepublishOnly": "npm run clean && npm run build"
     },
+    "dependencies": {
+        "zod": "^4.4.3"
+    },
     "peerDependencies": {
         "oxlint": "^1.76.0",
         "vitest": "^4.1.10"

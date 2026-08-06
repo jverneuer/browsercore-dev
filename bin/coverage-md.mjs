@@ -9,20 +9,27 @@
  * Distributed as the `coverage-md` bin of @browsercore/dev, replacing the
  * per-repo scripts/coverage-md.mjs copies.
  *
- * Dependency-free: only node:fs + node:path. Safe in CI with no install step.
+ * The bin is a thin I/O wrapper: all rendering logic and the boundary
+ * validation schema live in the compiled output (`dist/coverage-md.js`);
+ * this file reads JSON, validates it, renders, and writes results.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import {
+    renderCoverageMarkdown,
+    renderBadge,
+    CoverageSummarySchema,
+} from "../dist/coverage-md.js";
 
 const pkgRoot = process.cwd();
 const summaryPath = join(pkgRoot, "coverage", "coverage-summary.json");
 const outPath = join(pkgRoot, "COVERAGE.md");
 const badgePath = join(pkgRoot, ".github", "coverage-badge.json");
 
-/** @type {Record<string, { lines:{total:number,covered:number,pct:number}, statements:{total:number,covered:number,pct:number}, functions:{total:number,covered:number,pct:number}, branches:{total:number,covered:number,pct:number} }>} */
-let data;
+/** @type {unknown} */
+let raw;
 try {
-    data = JSON.parse(readFileSync(summaryPath, "utf-8"));
+    raw = readFileSync(summaryPath, "utf-8");
 } catch {
     console.error(
         `[coverage-md] Could not read ${summaryPath}. ` +
@@ -31,23 +38,9 @@ try {
     process.exit(1);
 }
 
-const total = data.total;
-/**
- * @typedef {Object} Metric
- * @property {string} label
- * @property {keyof typeof total} key
- */
-/** @type {Metric[]} */
-const metrics = [
-    { label: "Statements", key: "statements" },
-    { label: "Branches", key: "branches" },
-    { label: "Functions", key: "functions" },
-    { label: "Lines", key: "lines" },
-];
-/** @param {{pct:number,covered:number,total:number}} m */
-const render = (m) => `${m.pct}% (${m.covered}/${m.total})`;
+const parsed = CoverageSummarySchema.parse(JSON.parse(raw));
 
-const fileEntries = Object.entries(data)
+const fileEntries = Object.entries(parsed)
     .filter(([key]) => key !== "total")
     .map(([file, m]) => {
         // coverage-summary.json keys are absolute paths; show repo-relative.
@@ -56,44 +49,10 @@ const fileEntries = Object.entries(data)
     })
     .sort((a, b) => a.file.localeCompare(b.file));
 
-const lines = [];
-lines.push(`# Coverage report`);
-lines.push("");
-lines.push(`Generated from \`coverage-summary.json\` by \`coverage-md\` (@browsercore/dev).`);
-lines.push("");
-lines.push(`## Total`);
-lines.push("");
-lines.push(`| Metric | Coverage |`);
-lines.push(`| --- | --- |`);
-for (const { label, key } of metrics) {
-    lines.push(`| ${label} | ${render(total[key])} |`);
-}
-lines.push("");
-lines.push(`## Per-file`);
-lines.push("");
-const header = `| File | ${metrics.map((m) => m.label).join(" | ")} |`;
-const sep = `| --- | ${metrics.map(() => "---").join(" | ")} |`;
-lines.push(header);
-lines.push(sep);
-for (const { file, m } of fileEntries) {
-    lines.push(`| \`${file}\` | ${metrics.map((met) => render(m[met.key])).join(" | ")} |`);
-}
-lines.push("");
-
-writeFileSync(outPath, lines.join("\n"));
+const md = renderCoverageMarkdown(parsed, fileEntries);
+writeFileSync(outPath, md);
 console.log(`[coverage-md] wrote ${relative(process.cwd(), outPath)}`);
 
-// shields.io endpoint badge: a single coverage figure (statements %) for the
-// README badge. Color tiers mirror shields.io conventions.
-const pct = total.statements.pct;
-const badgeColor =
-    pct >= 90 ? "brightgreen" : pct >= 75 ? "green" : pct >= 50 ? "yellow" : "red";
-const badge = {
-    schemaVersion: 1,
-    label: "coverage",
-    message: `${pct}%`,
-    color: badgeColor,
-    namedLogo: "vitest",
-};
+const badge = renderBadge(parsed.total.statements.pct);
 writeFileSync(badgePath, JSON.stringify(badge));
 console.log(`[coverage-md] wrote ${relative(process.cwd(), badgePath)}`);

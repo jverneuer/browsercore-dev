@@ -8,35 +8,76 @@
  * @module
  * @since 0.1.0
  */
+import { z } from "zod";
 
 /**
- * Coverage totals for a single metric (statements, branches, functions, lines).
+ * Schema for a single metric's totals (statements, branches, functions, lines).
+ *
+ * @since 0.3.0
+ */
+const metricTotalsSchema = z.object({
+    /** Total number of trackable items. */
+    total: z.number(),
+    /** Number of items that were covered. */
+    covered: z.number(),
+    /** Coverage percentage (0–100). */
+    pct: z.number(),
+});
+
+/**
+ * Totals for a single metric (statements, branches, functions, lines).
+ *
+ * Derived from {@link metricTotalsSchema} so the type and its validator stay
+ * in sync.
  *
  * @since 0.1.0
  */
-export interface MetricTotals {
-    /** Total number of trackable items. */
-    total: number;
-    /** Number of items that were covered. */
-    covered: number;
-    /** Coverage percentage (0–100). */
-    pct: number;
-}
+export type MetricTotals = z.infer<typeof metricTotalsSchema>;
+
+/**
+ * Schema for one file's coverage entry (or the aggregate `total` entry).
+ *
+ * @since 0.3.0
+ */
+const fileCoverageSchema = z.object({
+    statements: metricTotalsSchema,
+    branches: metricTotalsSchema,
+    functions: metricTotalsSchema,
+    lines: metricTotalsSchema,
+});
 
 /**
  * The shape of v8's `coverage-summary.json` file.
  *
+ * `total` holds the aggregate; every other key is an absolute file path with
+ * the same per-metric shape. The `.catchall` validates every entry (total and
+ * per-file) against {@link fileCoverageSchema} without stripping the arbitrary
+ * file-path keys the bin iterates over.
+ *
+ * This is the single source of truth for the coverage shape: the
+ * {@link CoverageSummary} type is derived from it via `z.infer`, so the
+ * validated runtime shape and the static type can never drift.
+ *
+ * @since 0.3.0
+ */
+export const CoverageSummarySchema = z
+    .object({
+        total: fileCoverageSchema,
+    })
+    .catchall(fileCoverageSchema);
+
+/**
+ * The shape of v8's `coverage-summary.json` file.
+ *
+ * `total` holds the aggregate; every other key is an absolute file path with
+ * the same per-metric shape.
+ *
+ * Derived from {@link CoverageSummarySchema} so the type and its validator stay
+ * in sync.
+ *
  * @since 0.1.0
  */
-export interface CoverageSummary {
-    /** Aggregate totals across the whole project. */
-    total: {
-        statements: MetricTotals;
-        branches: MetricTotals;
-        functions: MetricTotals;
-        lines: MetricTotals;
-    };
-}
+export type CoverageSummary = z.infer<typeof CoverageSummarySchema>;
 
 /**
  * A single coverage metric with a human-readable label and its key in
