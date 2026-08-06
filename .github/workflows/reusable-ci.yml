@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pull-requests: write
     outputs:
       version: ${{ steps.version.outputs.current }}
       changed: ${{ steps.version.outputs.changed }}
@@ -37,29 +38,6 @@ jobs:
       - run: npm run lint -- --deny-warnings
       - run: npm test -- --coverage
 
-      # Generate badge + upload artifact BEFORE coverage enforcement so the
-      # badge is always available to the Pages workflow, even if coverage
-      # is below threshold (which blocks the job before reaching these steps).
-      - name: Generate COVERAGE.md + badge
-        run: |
-          npx coverage-md 2>/dev/null || true
-          node -e "
-          const fs = require('fs');
-          const t = JSON.parse(fs.readFileSync('coverage/coverage-summary.json','utf8')).total;
-          const pct = t.statements.pct;
-          const color = pct >= 90 ? 'brightgreen' : pct >= 75 ? 'green' : pct >= 50 ? 'yellow' : 'red';
-          const badge = { schemaVersion: 1, label: 'coverage', message: pct+'%', color, namedLogo: 'vitest' };
-          fs.mkdirSync('.github', { recursive: true });
-          fs.writeFileSync('.github/coverage-badge.json', JSON.stringify(badge));
-          "
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report
-          path: |
-            COVERAGE.md
-            .github/coverage-badge.json
-
       - name: Enforce >=94% coverage (statements, branches, functions, lines)
         env:
           MINIMUM: "94"
@@ -71,10 +49,24 @@ jobs:
           const failed = [['statements',s],['branches',b],['functions',f],['lines',l]].filter(([,p])=>p<min);
           if (failed.length) {
             console.error('Coverage below '+min+'% threshold:');
-            for (const [k,p] of failed) console.error('  '+k+'% < '+min+'%');
+            for (const [k,p] of failed) console.error('  '+k+' '+p+'% < '+min+'%');
             process.exit(1);
           }
           console.log('Coverage OK — statements '+s+'%, branches '+b+'%, functions '+f+'%, lines '+l+'% >= '+min+'%');
+          "
+
+      - name: Generate COVERAGE.md + badge
+        run: |
+          npx coverage-md 2>/dev/null || true
+          # Inline badge generation (independent of @browsercore/dev version)
+          node -e "
+          const fs = require('fs');
+          const t = JSON.parse(fs.readFileSync('coverage/coverage-summary.json','utf8')).total;
+          const pct = t.statements.pct;
+          const color = pct >= 90 ? 'brightgreen' : pct >= 75 ? 'green' : pct >= 50 ? 'yellow' : 'red';
+          const badge = { schemaVersion: 1, label: 'coverage', message: pct+'%', color, namedLogo: 'vitest' };
+          fs.mkdirSync('.github', { recursive: true });
+          fs.writeFileSync('.github/coverage-badge.json', JSON.stringify(badge));
           "
 
       - run: npm run build
@@ -98,6 +90,27 @@ jobs:
           fi
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
           echo "Version $CURRENT (previous: ${PREVIOUS:-<none>}) — changed: $CHANGED"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: |
+            COVERAGE.md
+            .github/coverage-badge.json
+
+      - name: Create PR for badge update
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "ci: update coverage badge [skip ci]"
+          title: "ci: update coverage badge"
+          body: "Automated coverage badge update from CI."
+          branch: bot/badge-update
+          delete-branch: true
+          add-paths: |
+            .github/coverage-badge.json
+            COVERAGE.md
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
