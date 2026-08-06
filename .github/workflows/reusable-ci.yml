@@ -134,7 +134,6 @@ jobs:
     needs: build-and-publish
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
+      contents: read
     steps:
       - run: echo "test"
