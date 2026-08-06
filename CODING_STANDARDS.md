@@ -14,19 +14,8 @@ the intended behavior lives in the types — never in tribal knowledge or hidden
 
 Every `tsconfig.json` inherits `tsconfig.base.json`, which carries:
 
-```json
-{
-  "strict": true,
-  "noUncheckedIndexedAccess": true,
-  "exactOptionalPropertyTypes": true
-}
-```
-
 - `noUncheckedIndexedAccess` → `arr[i]` is `T | undefined`.
 - `exactOptionalPropertyTypes` → `?` means absent-or-present, not present-and-undefined.
-
-Ambiguity creates bugs and forces LLMs to guess. **Never** override these to `false`
-in a sub-package to dodge an error. Fix the error instead.
 
 ## 2. Every important data structure has a type
 
@@ -49,13 +38,6 @@ interface HeadersFrame {
 
 Unknown external data is `unknown`, then validated. `any` is a build failure.
 
-```ts
-function parseFrame(raw: Uint8Array): Frame {
-    const unknown = decodeUnknown(raw); // unknown
-    return FrameSchema.parse(unknown);  // validated → typed
-}
-```
-
 ## 4. Interfaces for domain objects, type aliases for states/constraints
 
 - Interfaces for real entities (`TlsConnection`, `Http2Stream`, `Cookie`).
@@ -66,28 +48,9 @@ function parseFrame(raw: Uint8Array): Frame {
 
 No "state via nullable-field combos." Use discriminated unions.
 
-```ts
-// Bad — allows { state: "open", error: "failed" }
-interface Connection {
-    state: string;
-    stream?: Stream;
-    error?: string;
-}
-
-// Good
-type ConnectionState =
-    | { readonly state: "connecting" }
-    | { readonly state: "open"; readonly stream: Stream }
-    | { readonly state: "closed"; readonly reason: CloseReason };
-```
-
 ## 6. Discriminated unions for every workflow/state
 
-The compiler + LLM reason about every case.
-
 ## 7. Functions declare input AND output types
-
-Public functions always define both sides — no inference-only signatures on exported APIs.
 
 ## 8. One function = one decision
 
@@ -118,10 +81,6 @@ No in-place mutation of shared state. `const` over `let`.
 Everything from outside the boundary is `unknown`: sockets, files, captures, configs.
 Use **Zod** at every boundary:
 
-```ts
-const frame = FrameSchema.parse(raw);   // never `raw as Frame`
-```
-
 ## 13. Types are contracts, not documentation
 
 ```ts
@@ -147,26 +106,11 @@ type SessionId    = string & { __brand: "SessionId" };
 Every `switch` over a union hits `default: assertNever(x)`. Adding a state forces every
 handler to compile-error until handled.
 
-```ts
-function assertNever(x: never): never {
-    throw new Error(`Unexpected value: ${JSON.stringify(x)}`);
-}
-```
-
 ## 16. Explicit, typed errors
-
-```ts
-// Bad
-throw new Error("handshake failed");
-// Good
-throw new TlsHandshakeError("server_hello_parse", cause);
-```
 
 Errors are part of the API. Define them in each package's `errors.ts`.
 
 ## 17. No magic strings
-
-`if (event === Event.COLD_START)` or a string-literal union — never bare `"cold_start"`.
 
 ## 18. Clear dependency boundaries
 
@@ -196,6 +140,50 @@ Comments.
 Domain types live in each package's `types.ts`; wire schemas in `schemas.ts`. One source
 of truth, never duplicated shapes.
 
+## 21. Runtime independence & dependency injection
+
+Protocol layers never import `node:*` built-ins directly. When a package requires
+functionality provided by a specific runtime — `node:crypto`, `node:net`, `node:zlib`,
+`node:events`, etc. — that dependency must be isolated behind an internal provider
+interface **before** it becomes part of the package's implementation. This is an
+architectural rule, not an optimization. It keeps protocol state machines I/O-free and
+unit-testable against synthetic byte streams.
+
+**Runtime independence** — the concrete backend is hidden behind an interface:
+
+```ts
+// Bad — protocol layer reaches into the runtime
+import { createHash } from "node:crypto";
+const digest = createHash("sha256").update(data).digest();
+
+// Good — protocol layer depends only on the provider interface
+interface CryptoProvider {
+    hash(algorithm: HashAlgorithm, data: Uint8Array): Uint8Array;
+}
+const digest = crypto.hash("sha256", data);
+```
+
+**Dependency injection** — injected dependencies must never be tightly coupled. A
+constructor or function parameter is typed as an interface (`CryptoProvider`,
+`CompressionProvider`, `Transport`) — never a concrete class. This is what makes the
+provider swappable: tests inject fakes, production injects the Node-backed singleton, and
+neither side knows about the other.
+
+```ts
+// Bad — depends on the concrete implementation
+class TlsConnection {
+    constructor(private readonly crypto: NodeCryptoProvider) {}
+}
+
+// Good — depends on the interface
+class TlsConnection {
+    constructor(private readonly crypto: CryptoProvider) {}
+}
+```
+
+All provider interfaces use `Uint8Array` exclusively — never Node `Buffer`. Backend-specific
+error codes are wrapped at the provider boundary into typed errors and never leak upward.
+
 ---
 
 ## The Golden Rule
@@ -203,3 +191,6 @@ of truth, never duplicated shapes.
 Every piece of important information exists as one of: **a type, a function signature,
 an explicit state model, a schema validation, or clear naming.** Never rely on tribal
 knowledge or hidden assumptions.
+
+If a file is opened where any rule is not applied, it becomes the **obligation of the
+opening agent** to make the file compliant.
