@@ -133,6 +133,7 @@ jobs:
   deploy-pages:
     if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-publish
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       pages: write
