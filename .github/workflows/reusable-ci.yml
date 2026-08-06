@@ -16,7 +16,7 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     environment: CI
     permissions:
       contents: write
@@ -148,7 +148,7 @@ jobs:
   deploy-pages:
     if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       id-token: write
       pages: write
