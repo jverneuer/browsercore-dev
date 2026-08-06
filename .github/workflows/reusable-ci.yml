@@ -8,6 +8,11 @@ on:
         default: "26"
         required: false
         type: string
+      deploy-pages:
+        description: "Deploy coverage badge to GitHub Pages"
+        default: false
+        required: false
+        type: boolean
 
 jobs:
   build-and-publish:
@@ -124,3 +129,25 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           gh release create "$TAG" --title "$TAG" --generate-notes
+
+  deploy-pages:
+    if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-publish
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: _site/
+      - run: mv _site/.github/coverage-badge.json _site/badge.json && rm -rf _site/.github
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+      - id: deployment
+        uses: actions/deploy-pages@v4
