@@ -21,7 +21,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      pages: write
     outputs:
       version: ${{ steps.version.outputs.current }}
       changed: ${{ steps.version.outputs.changed }}
