@@ -105,6 +105,15 @@ jobs:
       - name: Test Pages action
         if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v6
+      - name: Prepare and upload
+        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p _site
+          cp .github/coverage-badge.json _site/badge.json
+      - uses: actions/upload-pages-artifact@v5
+        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: _site/
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
