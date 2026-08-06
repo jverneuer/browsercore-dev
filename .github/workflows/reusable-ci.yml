@@ -8,11 +8,6 @@ on:
         default: "26"
         required: false
         type: string
-      deploy-pages:
-        description: "Deploy coverage badge to GitHub Pages"
-        default: false
-        required: false
-        type: boolean
 
 jobs:
   build-and-publish:
@@ -21,7 +16,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      pages: write
     outputs:
       version: ${{ steps.version.outputs.current }}
       changed: ${{ steps.version.outputs.changed }}
@@ -102,21 +96,6 @@ jobs:
           path: |
             COVERAGE.md
             .github/coverage-badge.json
-
-      - name: Deploy coverage badge to GitHub Pages
-        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v6
-      - name: Prepare Pages artifact
-        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p _site
-          cp .github/coverage-badge.json _site/badge.json
-      - uses: actions/upload-pages-artifact@v5
-        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          path: _site/
-      - uses: actions/deploy-pages@v5
-        if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
