@@ -131,8 +131,21 @@ jobs:
           gh release create "$TAG" --title "$TAG" --generate-notes
 
   deploy-pages:
+    if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-publish
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
+      pages: write
       contents: read
     steps:
-      - run: echo "test"
+      - uses: actions/configure-pages@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-report
+          path: _site/
+      - run: mv _site/.github/coverage-badge.json _site/badge.json && rm -rf _site/.github
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site/
+      - uses: actions/deploy-pages@v5
