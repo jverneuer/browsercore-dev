@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pull-requests: write
     outputs:
       version: ${{ steps.version.outputs.current }}
       changed: ${{ steps.version.outputs.changed }}
@@ -96,6 +97,20 @@ jobs:
           path: |
             COVERAGE.md
             .github/coverage-badge.json
+
+      - name: Create PR for badge update
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "ci: update coverage badge [skip ci]"
+          title: "ci: update coverage badge"
+          body: "Automated coverage badge update from CI."
+          branch: bot/badge-update
+          delete-branch: true
+          add-paths: |
+            .github/coverage-badge.json
+            COVERAGE.md
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
