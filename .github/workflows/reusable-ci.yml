@@ -129,3 +129,10 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           gh release create "$TAG" --title "$TAG" --generate-notes
+
+  deploy-pages:
+    if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "test"
