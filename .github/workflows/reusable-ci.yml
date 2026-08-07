@@ -16,7 +16,7 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
