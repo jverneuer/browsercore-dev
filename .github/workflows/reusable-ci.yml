@@ -108,10 +108,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
           registry-url: https://registry.npmjs.org
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
+      - run: npm install
 
       - name: Publish to npm (skips if version already exists)
         env:
