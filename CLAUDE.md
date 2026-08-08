@@ -98,7 +98,7 @@ Distinguish:
 
 A task is complete only when **all** of the following are true:
 1. Code compiles (`typecheck` passes) and lint is clean
-2. Tests pass with required coverage
+2. **Tests pass with sufficient coverage** — each repo enforces a minimum threshold (typically ≥90% statements/branches/functions/lines). When moving code between repos, coverage must be restored in BOTH: the source repo (add tests for remaining code) and the destination repo (tests for the moved code). Never let a PR land with a coverage drop.
 3. **README updated** to reflect any API, architecture, or dependency changes
 4. **Inline comments updated** — every file touched must have its header/inline comments reflect the current architecture (e.g. `EventProvider` not `EventEmitter`, Platform injection not singletons)
 5. No local environment noise leaked into docs (see below)
