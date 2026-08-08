@@ -58,6 +58,21 @@ npx tsx scripts/memory-query.ts questions
 
 Conventions: `.claude/memory-conventions.md`
 
+### Memory Usage Rules
+
+The memory system is the **cross-session knowledge base**. Use it proactively:
+
+- **SEARCH before starting work** — run `memory-query.ts search "<topic>"` to surface prior decisions, patterns, and architectural constraints before writing code
+- **STORE after completing work** — when you make an architectural decision, fix a non-obvious bug, or learn a project pattern, record it as a fact:
+  ```bash
+  npx tsx scripts/memory-store.ts --scope architecture --key "platform-composition-root" --value "..."
+  ```
+- **UPDATE stale facts** — if a fact references outdated architecture (e.g. singletons instead of Platform injection), update it rather than duplicating
+- **Scope facts correctly**: `architecture` (design decisions), `contracts` (interface shapes), `patterns` (recurring solutions), `operational` (tooling/CI), `bugs` (known issues + fixes)
+- **Link related facts** — reference other fact keys when recording a decision that depends on or contradicts prior knowledge
+
+Memory is how the system learns. Unrecorded knowledge is lost at session end.
+
 ## Agent System
 
 Agent definitions: `agents/{type}/AGENT.md`
