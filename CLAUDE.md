@@ -95,6 +95,13 @@ When a fix touches a lower-layer package, all downstream packages must bump thei
 2. Each downstream repo bumps its dep version → PR → CI → merge → publish
 3. Work proceeds layer by layer (parallel within a layer)
 
+### Version Bumping
+
+- **Patch only by default** — only bump the lowest number (the `x` in `y.y.x`). Patch bumps are safe and can be done freely.
+- **Never skip a version** — each bump increments by exactly one. Going from `0.2.1` to `0.2.3` (skipping `0.2.2`) is forbidden. Every intermediate version must exist on npm.
+- **Minor/major bumps need confirmation** — any bump to the middle or first number (`y.x.x` → `y.(x+1).0` or `(y+1).0.0`) requires explicit user approval. These signal breaking changes or feature milestones and the user controls the narrative.
+- **Publish order matters** — upstream packages must publish before downstream packages can bump their deps. A version bump in a downstream package is only valid after the upstream version it references is live on npm.
+
 ### PR Health Verification
 
 Always verify PR status before reporting completion:
