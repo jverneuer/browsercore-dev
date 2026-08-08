@@ -77,6 +77,13 @@ Memory is how the system learns. Unrecorded knowledge is lost at session end.
 
 Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/code-standards.md` before writing any code — it is the binding standard for all repos.
 
+### Agent Orchestration Rules
+
+- **Parallelize aggressively** — whenever a task has 3+ independent work items (repos, phases, file groups), dispatch one agent per item in parallel. Serial agent dispatch is a last resort, not a default.
+- **Consistency verification** — if more than 5 agents have touched the same folder or repo, dispatch a dedicated review agent to verify consistency: same patterns, same style, same conventions applied everywhere. Inconsistencies become a cleanup task.
+- **One agent per repo per phase** — don't send two agents into the same repo at the same time; they'll conflict on branches and files. Sequence them or merge their scope into one agent.
+- **Respect agent lifetime** — verify an agent is truly unresponsive (not just slow on mechanical changes) before killing it.
+
 | Agent | Type | Expertise |
 |-------|------|-----------|
 | session-startup | bridge | Cross-session continuity |
