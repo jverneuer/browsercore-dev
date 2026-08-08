@@ -80,6 +80,41 @@ When a fix touches a lower-layer package, all downstream packages must bump thei
 2. Each downstream repo bumps its dep version → PR → CI → merge → publish
 3. Work proceeds layer by layer (parallel within a layer)
 
+### PR Health Verification
+
+Always verify PR status before reporting completion:
+```bash
+gh pr list --state open --json number,title,headRefName,statusCheckRollup
+gh run view <runId> --repo jverneuer/<repo> --log-failed
+```
+
+**NPM cascade failures are expected.** When a PR introduces a new interface or type in a lower-layer package (e.g. contracts), downstream PRs will fail typecheck until that package is published to npm and the dep is bumped. This is normal polyrepo mechanics — resolve it at the end by publishing in DAG order (Layer 0 → 1 → 2 → 3 → 4 → 5), not by blocking every PR.
+
+Distinguish:
+- **Cascade failure** (expected) — missing export from `@browsercore/*` that was just added in another open PR. No action needed until publish time.
+- **Real bug** (fix now) — lint errors, type errors in the repo's own code, coverage threshold drops from moved tests, wrong import style. These must be fixed before the PR can merge.
+
+### Definition of Done
+
+A task is complete only when **all** of the following are true:
+1. Code compiles (`typecheck` passes) and lint is clean
+2. Tests pass with required coverage
+3. **README updated** to reflect any API, architecture, or dependency changes
+4. **Inline comments updated** — every file touched must have its header/inline comments reflect the current architecture (e.g. `EventProvider` not `EventEmitter`, Platform injection not singletons)
+5. No local environment noise leaked into docs (see below)
+
+### Documentation Hygiene
+
+**NEVER** pollute comments, READMEs, or docs with local setup instructions:
+- No `npm install # pulls in @browsercore/dev (file:../dev locally)`
+- No workspace-specific paths, `npm link` instructions, or "how to set up this monorepo" notes
+- READMEs describe **what the package is and how to use it**, not how to develop the polyrepo
+
+Inline comments must always reflect the **current** architecture:
+- Reference injected `EventProvider`, not `EventEmitter`
+- Reference Platform composition root, not global singletons
+- Reference `@browsercore/contracts` types, not implementation-specific paths
+
 ## The Repos
 
 All repos live under `../` (sibling directories). Each is its own git repo:
