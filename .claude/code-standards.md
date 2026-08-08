@@ -18,7 +18,7 @@ Every `tsconfig.json` inherits `tsconfig.base.json`, which carries:
 - `noUncheckedIndexedAccess` → `arr[i]` is `T | undefined`.
 - `exactOptionalPropertyTypes` → `?` means absent-or-present, not present-and-undefined.
 - `verbatimModuleSyntax` — use `import type` for type-only imports; never import a type as a value.
-- Target `ES2024`, module `Node16`, module resolution `Node16`.
+- Every repo inherits `tsconfig.base.json` (in this dev repo). Match that file's `compilerOptions` — do not override target/module settings locally.
 
 ## 2. Every important data structure has a type
 
