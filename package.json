@@ -52,9 +52,16 @@
         "test": "vitest run",
         "lint": "oxlint --type-aware src/",
         "clean": "rm -rf dist coverage",
-        "prepublishOnly": "npm run clean && npm run build"
+        "prepublishOnly": "npm run clean && npm run build",
+        "graph": "npx tsx scripts/resolve-graph.ts",
+        "memory:brief": "npx tsx scripts/memory-session.ts brief",
+        "memory:search": "npx tsx scripts/memory-query.ts search",
+        "memory:questions": "npx tsx scripts/memory-query.ts questions",
+        "memory:facts": "npx tsx scripts/memory-query.ts facts"
     },
     "dependencies": {
+        "@tursodatabase/database": "^0.2.0",
+        "@xenova/transformers": "^2.17.2",
         "zod": "^4.4.3"
     },
     "peerDependencies": {

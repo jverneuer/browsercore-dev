@@ -1,0 +1,62 @@
+# memory-injection.yaml — Fact Injection Configuration for @browsercore
+
+## Injection Rules
+
+### Confidence thresholds
+min_inject_confidence: 0.7    # Below this, facts are NOT injected into prompts
+preferred_confidence: 0.9     # Above this, facts stated as ground truth
+max_facts_per_response: 7     # Prevent context bloat
+max_facts_per_task_plan: 10   # Slightly higher for planning
+
+### Scope relevance matching
+architecture_work:
+  scopes: [architecture, bugs]
+  stability_preference: stable
+
+code_patterns_work:
+  scopes: [patterns]
+  stability_preference: stable
+
+api_contracts_work:
+  scopes: [contracts]
+  stability_preference: stable
+
+deployment_work:
+  scopes: [operational, contracts]
+  stability_preference: stable
+
+full_system_design:
+  scopes: [architecture, patterns, contracts, bugs]
+  stability_preference: stable
+
+### Task-type injection profiles
+
+bug_fix:
+  relevant_scopes: [bugs, contracts, patterns]
+  confidence_floor: 0.8        # Higher bar — precision matters for bugs
+
+feature_implementation:
+  relevant_scopes: [architecture, patterns, contracts]
+  confidence_floor: 0.7
+
+refactor:
+  relevant_scopes: [architecture, patterns]
+  confidence_floor: 0.7
+
+investigation:
+  relevant_scopes: [operational, architecture, contracts, bugs]
+  confidence_floor: 0.6        # Lower bar — gathering context
+
+dependency_bump:
+  relevant_scopes: [operational, patterns]
+  confidence_floor: 0.8        # Must know the publish chain
+
+### Fact aging
+doc_sourced_half_life_days: 30   # Unverified doc facts lose confidence over time
+code_sourced_half_life_days: 90  # Code facts age slower (code changes less often)
+conversation_half_life_days: 14  # Conversation facts age fastest
+
+### Conflict handling
+on_conflict: question_file      # Never silently overwrite; write a question
+on_supersede: keep_lineage      # Old fact gets superseded-by link, not deleted
+on_contradiction_code_wins: true # Source code beats docs for deployed/runtime facts

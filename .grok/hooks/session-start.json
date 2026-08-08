@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx tsx scripts/memory-session.ts brief 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "QUERY=$(cat | jq -r '.userPrompt // empty' 2>/dev/null) && if [ -n \"$QUERY\" ]; then npx tsx scripts/memory-query.ts search \"$QUERY\" 2>/dev/null | head -20; fi || true",
+            "timeout": 8
+          }
+        ]
+      }
+    ]
+  }
+}

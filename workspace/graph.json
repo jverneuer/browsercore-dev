@@ -1,0 +1,224 @@
+{
+  "nodes": {
+    "@browsercore/compression": {
+      "name": "@browsercore/compression",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-compression",
+      "dir": "browsercore-compression",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/contracts": {
+      "name": "@browsercore/contracts",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-contracts",
+      "dir": "browsercore-contracts",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/cookies": {
+      "name": "@browsercore/cookies",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-cookies",
+      "dir": "browsercore-cookies",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/crypto": {
+      "name": "@browsercore/crypto",
+      "version": "0.2.1",
+      "repo": "jverneuer/browsercore-crypto",
+      "dir": "browsercore-crypto",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/dev": {
+      "name": "@browsercore/dev",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-dev",
+      "dir": "browsercore-dev",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/devtools": {
+      "name": "@browsercore/devtools",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-devtools",
+      "dir": "browsercore-devtools",
+      "deps": [
+        "@browsercore/cookies",
+        "@browsercore/crypto",
+        "@browsercore/fetch",
+        "@browsercore/http1",
+        "@browsercore/http2",
+        "@browsercore/profiles",
+        "@browsercore/tls",
+        "@browsercore/transport"
+      ],
+      "layer": 4
+    },
+    "@browsercore/fetch": {
+      "name": "@browsercore/fetch",
+      "version": "0.2.4",
+      "repo": "jverneuer/browsercore-fetch",
+      "dir": "browsercore-fetch",
+      "deps": [
+        "@browsercore/compression",
+        "@browsercore/contracts",
+        "@browsercore/cookies",
+        "@browsercore/crypto",
+        "@browsercore/http1",
+        "@browsercore/http2",
+        "@browsercore/profiles",
+        "@browsercore/tls",
+        "@browsercore/transport"
+      ],
+      "layer": 3
+    },
+    "@browsercore/http1": {
+      "name": "@browsercore/http1",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-http1",
+      "dir": "browsercore-http1",
+      "deps": [
+        "@browsercore/transport",
+        "@browsercore/compression"
+      ],
+      "layer": 2
+    },
+    "@browsercore/http2": {
+      "name": "@browsercore/http2",
+      "version": "0.2.2",
+      "repo": "jverneuer/browsercore-http2",
+      "dir": "browsercore-http2",
+      "deps": [
+        "@browsercore/transport",
+        "@browsercore/crypto"
+      ],
+      "layer": 2
+    },
+    "@browsercore/http3": {
+      "name": "@browsercore/http3",
+      "version": "0.1.6",
+      "repo": "jverneuer/browsercore-http3",
+      "dir": "browsercore-http3",
+      "deps": [
+        "@browsercore/quic",
+        "@browsercore/transport"
+      ],
+      "layer": 4
+    },
+    "@browsercore/profiles": {
+      "name": "@browsercore/profiles",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-profiles",
+      "dir": "browsercore-profiles",
+      "deps": [],
+      "layer": 0
+    },
+    "@browsercore/quic": {
+      "name": "@browsercore/quic",
+      "version": "0.2.1",
+      "repo": "jverneuer/browsercore-quic",
+      "dir": "browsercore-quic",
+      "deps": [
+        "@browsercore/crypto",
+        "@browsercore/tls",
+        "@browsercore/transport"
+      ],
+      "layer": 3
+    },
+    "@browsercore/testing": {
+      "name": "@browsercore/testing",
+      "version": "0.2.0",
+      "repo": "jverneuer/browsercore-testing",
+      "dir": "browsercore-testing",
+      "deps": [
+        "@browsercore/compression",
+        "@browsercore/cookies",
+        "@browsercore/crypto",
+        "@browsercore/fetch",
+        "@browsercore/http1",
+        "@browsercore/http2",
+        "@browsercore/profiles",
+        "@browsercore/tls",
+        "@browsercore/transport",
+        "@browsercore/dev"
+      ],
+      "layer": 4
+    },
+    "@browsercore/tls": {
+      "name": "@browsercore/tls",
+      "version": "0.4.1",
+      "repo": "jverneuer/browsercore-tls",
+      "dir": "browsercore-tls",
+      "deps": [
+        "@browsercore/transport",
+        "@browsercore/crypto"
+      ],
+      "layer": 2
+    },
+    "@browsercore/transport": {
+      "name": "@browsercore/transport",
+      "version": "0.2.4",
+      "repo": "jverneuer/browsercore-transport",
+      "dir": "browsercore-transport",
+      "deps": [
+        "@browsercore/contracts"
+      ],
+      "layer": 1
+    },
+    "browsersmith": {
+      "name": "browsersmith",
+      "version": "0.0.4",
+      "repo": "jverneuer/browsersmith",
+      "dir": "browsersmith",
+      "deps": [
+        "@browsercore/compression",
+        "@browsercore/contracts",
+        "@browsercore/cookies",
+        "@browsercore/crypto",
+        "@browsercore/fetch",
+        "@browsercore/http1",
+        "@browsercore/http2",
+        "@browsercore/http3",
+        "@browsercore/profiles",
+        "@browsercore/quic",
+        "@browsercore/tls",
+        "@browsercore/transport"
+      ],
+      "layer": 5
+    }
+  },
+  "layers": [
+    [
+      "@browsercore/compression",
+      "@browsercore/contracts",
+      "@browsercore/cookies",
+      "@browsercore/crypto",
+      "@browsercore/dev",
+      "@browsercore/profiles"
+    ],
+    [
+      "@browsercore/transport"
+    ],
+    [
+      "@browsercore/http1",
+      "@browsercore/http2",
+      "@browsercore/tls"
+    ],
+    [
+      "@browsercore/fetch",
+      "@browsercore/quic"
+    ],
+    [
+      "@browsercore/devtools",
+      "@browsercore/http3",
+      "@browsercore/testing"
+    ],
+    [
+      "browsersmith"
+    ]
+  ],
+  "entryPoint": "browsersmith"
+}
