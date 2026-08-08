@@ -12,13 +12,11 @@ the intended behavior lives in the types — never in tribal knowledge or hidden
 
 ## 1. Strict compiler — never relax it
 
-Every `tsconfig.json` inherits `tsconfig.base.json`, which carries:
+Every repo's `tsconfig.json` inherits `tsconfig.base.json` from this dev repo. Agents must:
 
-- `strict: true`
-- `noUncheckedIndexedAccess` → `arr[i]` is `T | undefined`.
-- `exactOptionalPropertyTypes` → `?` means absent-or-present, not present-and-undefined.
-- `verbatimModuleSyntax` — use `import type` for type-only imports; never import a type as a value.
-- Every repo inherits `tsconfig.base.json` (in this dev repo). Match that file's `compilerOptions` — do not override target/module settings locally.
+- **Inherit, never override** — do not set `target`, `module`, `moduleResolution`, or any strictness flag locally. The base file is the single source of truth.
+- **Additive only** — a repo's `tsconfig.json` may only add `include`/`exclude` paths or repo-specific `lib` entries. It must not redeclare or weaken any `compilerOption` already set in the base.
+- **If a repo's tsconfig deviates** (e.g. stuck on `ES2022`/`Node16`), that is a bug — fix it by aligning to the base, not by justifying the deviation.
 
 ## 2. Every important data structure has a type
 
