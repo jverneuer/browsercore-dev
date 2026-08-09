@@ -173,10 +173,14 @@ jobs:
                 const cat = categories.find(c => c.prefix === type);
                 const key = cat.label;
                 if (!buckets.has(key)) buckets.set(key, []);
-                const formatted = scope ? `**${scope}**: ${desc}` : desc;
+                // Escape @ mentions so GitHub doesn't auto-link @browsercore, @main, etc. as users
+                const safeScope = scope ? scope.replace(/@(browsercore|main|github)/g, "@&#8203;$1") : scope;
+                const safeDesc = desc.replace(/@(browsercore|main|github)/g, "@&#8203;$1");
+                const formatted = safeScope ? `**${safeScope}**: ${safeDesc}` : safeDesc;
                 buckets.get(key).push(`- ${formatted}`);
               } else {
-                uncategorized.push(`- ${line}`);
+                // Escape @ in uncategorized lines too
+                uncategorized.push(`- ${line.replace(/@(browsercore|main|github)/g, "@&#8203;$1")}`);
               }
             }
 
@@ -194,7 +198,7 @@ jobs:
           ' "$PREV_TAG")
 
           # Build release title from version + first feat/fix commit
-          TITLE_DESC=$(git log $RANGE --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//')
+          TITLE_DESC=$(git log $RANGE --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//' | sed 's/@\(browsercore\|main\|github\)/@\&#8203;\1/g')
           if [ -n "$TITLE_DESC" ]; then
             TITLE="${TAG} — ${TITLE_DESC}"
           else
@@ -207,9 +211,11 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+          # Escape @ in package name to prevent GitHub auto-linking as user mention
+          SAFE_NAME=$(echo "$NAME" | sed 's/@\(browsercore\)/@\&#8203;\1/g')
           gh release create "$TAG" \
             --title "$TITLE" \
-            --notes "$(echo -e "**${NAME}@${VERSION}**\n\n${CHANGELOG}")"
+            --notes "$(echo -e "**${SAFE_NAME}@${VERSION}**\n\n${CHANGELOG}")"
 
   deploy-pages:
     if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
