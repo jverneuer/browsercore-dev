@@ -113,6 +113,7 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 | test-engineer | specialist | E2E gates, coverage, golden captures |
 | integration-engineer | specialist | Browsersmith wiring, crawl API |
 | pr-gatekeeper | gatekeeper | The ONLY agent that opens PRs; runs validate-pr first |
+| release-manager | coordinator | Coordinated version bumps, publish verification, DAG-ordered releases |
 
 ### Task-to-Agent Routing (MANDATORY)
 
@@ -128,6 +129,7 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 | **browsersmith** repo fixes, crawl API, Platform wiring | `integration-engineer` | Owns the composition root where all packages meet |
 | **Creating or merging ANY PR** | `pr-gatekeeper` | The ONLY agent allowed to create/merge PRs |
 | **Multi-repo DAG dispatch** (3+ repos) | `top-orchestrator` | Owns DAG resolution and cross-repo parallel dispatch |
+| **Coordinated version bumps, publish verification** | `release-manager` | Owns DAG-ordered publishing and dep-bump cascades across repos |
 | **Continuity from prior session** | `session-startup` | Owns memory summarization and task resumption |
 
 #### How to invoke a specialist
