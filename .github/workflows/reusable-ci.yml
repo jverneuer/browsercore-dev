@@ -110,6 +110,27 @@ jobs:
 
       - run: npm install
 
+      - name: Auto-bump patch version if current version already exists on npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION already on npm — auto-bumping patch version"
+            npm version patch --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add package.json
+            git commit -m "chore: auto-bump to ${NEW_VERSION} for publish"
+            git push
+            echo "Bumped to ${NEW_VERSION}"
+          else
+            echo "$NAME@$VERSION not yet published — proceeding"
+          fi
+
       - name: Publish to npm (skips if version already exists)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
