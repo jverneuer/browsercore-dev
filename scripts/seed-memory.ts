@@ -38,16 +38,26 @@ async function main(): Promise<void> {
         {
             id: "contracts/platform-interface",
             scope: "contracts" as Scope,
-            statement: "Platform interface: { network: { tcp: Net, dns: DnsResolver, udp: UdpTransport }, crypto: CryptoProvider, compression: CompressionProvider, events: EventEmitter, telemetry, time }. Defined in @browsercore/contracts.",
+            statement: "Platform interface: { network: Network { tcp: Net, dns: DnsResolver, udp: DatagramTransport }, crypto: Crypto { provider: CryptoProvider }, compression: Compression (= CompressionProvider), events: EventProvider, telemetry: Telemetry, time: Time }. Defined in @browsercore/contracts/src/platform.ts. Browsersmith is the ONLY package that builds a Platform — protocol packages receive it through options.",
             base_confidence: 1.0,
-            coupling: "@browsercore/contracts, browsersmith/wiring.ts",
+            coupling: "@browsercore/contracts/src/platform.ts, browsersmith/wiring.ts",
+            agents_must_know: "- Platform.events is EventProvider, NOT EventEmitter\n- Compression is now an alias for CompressionProvider (the async encode/decode shape was dropped)\n- Crypto wraps CryptoProvider in a bundle: Platform.crypto.provider",
         },
         {
             id: "contracts/transport-interface",
             scope: "contracts" as Scope,
-            statement: "Transport interface: { id, state, read(): Promise<Uint8Array>, write(data): Promise<void>, close(): Promise<void> }. Extends EventEmitter. States: connecting, open, closed.",
+            statement: "Transport interface: { id: string, state: TransportState, write(data: Uint8Array): Promise<void>, read(): Promise<Uint8Array>, close(reason?): Promise<void> }. Has typed on/once for exactly 3 events (data, close, error) with void returns. Does NOT extend EventEmitter — it is a typed stream, not a generic bus. The @browsercore/transport package receives its event backend via Platform.events internally.",
             base_confidence: 1.0,
-            coupling: "@browsercore/transport, @browsercore/contracts",
+            coupling: "@browsercore/contracts/src/contracts.ts, @browsercore/transport",
+            agents_must_know: "- Transport does NOT extend node:events.EventEmitter\n- on/once return void, not this (no chaining)\n- Only 3 events: 'data', 'close', 'error' — no addListener, prependListener, setMaxListeners, etc.\n- Any code adding EventEmitter methods to a Transport implementation is a regression",
+        },
+        {
+            id: "contracts/event-provider",
+            scope: "contracts" as Scope,
+            statement: "EventProvider interface: { on(event, listener): void, once, off, removeListener, emit(event, ...args): boolean, listenerCount(event): number, removeAllListeners(event?): void }. Defined in @browsercore/contracts/src/events.ts. This REPLACES node:events.EventEmitter — no protocol package inherits from EventEmitter. The adapter in browsersmith implements EventProvider backed by node:events and injects it via Platform.events.",
+            base_confidence: 1.0,
+            coupling: "@browsercore/contracts/src/events.ts, browsersmith/src/platform/events/node/event-provider.ts",
+            agents_must_know: "- EventProvider is the contract; node:events is only one implementation\n- TypedEventEmitter<T> is the typed counterpart for compile-time safety\n- All on/off/once return void — no chainable this",
         },
 
         // ── Patterns ──────────────────────────────────────────────────
@@ -109,6 +119,27 @@ async function main(): Promise<void> {
             base_confidence: 1.0,
             coupling: "browsercore-fetch/src/dispatch.ts",
             detail: "The fix removed requireDeps entirely from transport. openTcpTransport now throws if net/dns undefined.",
+        },
+
+        // ── Operational: Session recovery ────────────────────────────
+        {
+            id: "operational/repo-recovery-2026-08-09",
+            scope: "operational" as Scope,
+            statement: "On 2026-08-09, a rogue E2E testing agent deleted 10 of 15 repos from disk (contracts, crypto, compression, transport, tls, http1, http2, fetch, cookies, profiles). All were recovered via git clone from GitHub. No commit history was lost — all feature branches are intact on remote and local. The .memory/browsercore.db SQLite database was PERMANENTLY LOST because .memory/ was gitignored. DB was rebuilt from seed-memory.ts.",
+            base_confidence: 1.0,
+            coupling: "all repos, browsercore-dev/.gitignore, browsercore-dev/.memory/",
+            agents_must_know: "- NEVER gitignore .memory/ — it holds the cross-session knowledge base\n- The DB was rebuilt on 2026-08-09 with updated seed facts reflecting the Platform refactor\n- If seed facts are stale, update them in scripts/seed-memory.ts BEFORE re-seeding\n- Two repos had uncommitted local-only changes at recovery time: quic (EventEmitter regression — discard) and browsersmith (README docs — legitimate)",
+            stability: "stable",
+        },
+        {
+            id: "operational/platform-refactor-status",
+            scope: "operational" as Scope,
+            statement: "As of 2026-08-09: A massive multi-repo Platform refactor is in flight. 13 of 15 repos are on feature branches. Green PRs: compression #38, crypto #56, transport #51, http3 #52. Red PRs: contracts #7 (real bug — duplicated imports in platform.ts), tls #65 (cascade — EventProvider not in published contracts), http1 #39 (cascade — ETARGET contracts@0.2.2), http2 #48 (cascade — ETARGET transport@0.2.5), fetch #56 (real bugs — Compression/Transport type mismatches), quic #56 (cascade — ETARGET contracts@0.2.2), browsersmith #55 (unknown failure). cookies & profiles are on main, no changes.",
+            base_confidence: 0.95,
+            coupling: "all repos",
+            detail: "Publish order: contracts (must fix lint first) → crypto + compression → transport → tls + http1 + http2 → quic + fetch → browsersmith. Each layer must publish before downstream can bump deps.",
+            agents_must_know: "- Real bugs to fix: contracts PR#7 (duplicated ./contracts.js imports in platform.ts), fetch PR#56 (Compression vs CompressionProvider, Transport.on return type)\n- quic has an uncommitted EventEmitter regression that should be discarded (git checkout -- src/handshake/quic-transport-adapter.ts)\n- Cascade failures are expected polyrepo mechanics — resolve at publish time, not per-PR",
+            stability: "evolving",
         },
     ];
 

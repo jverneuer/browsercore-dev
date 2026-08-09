@@ -5,9 +5,17 @@ git repos). It is NOT a monorepo — each repo publishes independently to npm.
 
 ## Session Start Protocol (MANDATORY)
 
-Run this as your VERY FIRST action in every new session:
+Run this as your VERY FIRST action in every new session — before any investigation, code changes, or exploration:
 
 ```bash
+npx tsx scripts/memory-session.ts brief
+```
+
+**If the command fails** with "failed to open file" or "entity not found", the memory DB is missing (`.memory/browsercore.db` was deleted or not yet created). Rebuild it immediately:
+
+```bash
+mkdir -p .memory
+npx tsx scripts/seed-memory.ts
 npx tsx scripts/memory-session.ts brief
 ```
 
@@ -17,6 +25,8 @@ Present the output as a summary:
 - If nothing pending → "No leftovers — ready for new work"
 
 Then WAIT for the user's choice.
+
+**Skipping the session brief is forbidden.** The memory DB holds cross-session architecture decisions, bug fixes, and operational context. Every session starts with it — no exceptions, no "I'll check later."
 
 ## Dependency Graph
 
@@ -41,6 +51,8 @@ Work flows bottom-up: fix contracts → bump transport → bump tls/fetch → bu
 
 Location: `memory/` directory + SQLite DB at `.memory/browsercore.db`
 
+**The `.memory/` directory is tracked by git.** It was previously gitignored, which caused permanent data loss when repos were re-cloned. If `.memory/` appears in `.gitignore` again, remove it immediately — the DB is the cross-session knowledge base and must be committed.
+
 **Search:**
 ```bash
 npx tsx scripts/memory-query.ts search "TLS key schedule"
@@ -54,6 +66,12 @@ npx tsx scripts/memory-query.ts facts --scope architecture
 **Open questions:**
 ```bash
 npx tsx scripts/memory-query.ts questions
+```
+
+**Rebuild the DB from seed** (if DB is missing or corrupted):
+```bash
+mkdir -p .memory
+npx tsx scripts/seed-memory.ts
 ```
 
 Conventions: `.claude/memory-conventions.md`
@@ -91,6 +109,12 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 | fingerprint-engineer | specialist | Profiles, JA3/JA4, ClientHello |
 | test-engineer | specialist | E2E gates, coverage, golden captures |
 | integration-engineer | specialist | Browsersmith wiring, crawl API |
+
+### Agent Safety Rules
+
+- **NEVER delete a repo directory** — no `rm -rf`, `rm -r`, or equivalent on `../browsercore-*` or `../browsersmith`. A rogue E2E agent deleted 10 repos on 2026-08-09, causing permanent memory DB loss. If a repo needs a clean checkout, `git clean -fdx` inside the repo — never remove the repo itself.
+- **NEVER gitignore `.memory/`** — the SQLite DB at `.memory/browsercore.db` is the cross-session knowledge base. It must be tracked by git.
+- **NEVER use `npm link` across repos** — it creates fragile symlinks that break on relocation. Use `file:` references in `package.json` for local development.
 
 ## Cross-Repo Workflow
 
