@@ -135,77 +135,46 @@ jobs:
           fi
 
           # Find the previous tag for the changelog range.
-          # The current tag doesn't exist yet, so the most recent existing tag IS the previous release.
-          # Using --sort=-v:refname sorts by semantic version (not alphabetically).
           PREV_TAG=$(git tag --sort=-v:refname | head -1)
 
-          # Collect commits and group by conventional-commit prefix
-          if [ -n "$PREV_TAG" ]; then
-            RANGE="${PREV_TAG}..HEAD"
-          else
-            RANGE="HEAD"
-          fi
-
-          # Build categorized changelog from commit messages
-          CHANGELOG=$(node -e '
-            const { execSync } = require("child_process");
-            const prevTag = process.argv[1];
-            const range = prevTag ? `${prevTag}..HEAD` : "HEAD";
-            const log = execSync(`git log ${range} --pretty=format:"%s" --no-merges`, { encoding: "utf8" });
-            const lines = log.trim().split("\n").filter(Boolean);
-
-            const categories = [
-              { prefix: "feat",     label: "✨ Features" },
-              { prefix: "fix",      label: "🐛 Bug Fixes" },
-              { prefix: "refactor", label: "♻️ Refactoring" },
-              { prefix: "perf",     label: "⚡ Performance" },
-              { prefix: "docs",     label: "📚 Documentation" },
-              { prefix: "test",     label: "🧪 Tests" },
-              { prefix: "ci",       label: "🔧 CI" },
-              { prefix: "chore",    label: "🔧 Chore" },
-            ];
-
-            const buckets = new Map();
-            const uncategorized = [];
-
-            for (const line of lines) {
-              const match = line.match(/^(feat|fix|refactor|perf|docs|test|ci|chore)(?:\(([^)]+)\))?:\s*(.+)/);
-              if (match) {
-                const [, type, scope, desc] = match;
-                const cat = categories.find(c => c.prefix === type);
-                const key = cat.label;
-                if (!buckets.has(key)) buckets.set(key, []);
-                // Escape @ mentions so GitHub doesn't auto-link @browsercore, @main, etc. as users
-                const safeScope = scope ? scope.replace(/@(browsercore|main|github)/g, "@&#8203;$1") : scope;
-                const safeDesc = desc.replace(/@(browsercore|main|github)/g, "@&#8203;$1");
-                const formatted = safeScope ? `**${safeScope}**: ${safeDesc}` : safeDesc;
-                buckets.get(key).push(`- ${formatted}`);
-              } else {
-                // Escape @ in uncategorized lines too
-                uncategorized.push(`- ${line.replace(/@(browsercore|main|github)/g, "@&#8203;$1")}`);
-              }
+          # Generate categorized changelog (write to temp file to avoid bash quoting issues)
+          cat > /tmp/changelog.js << 'ENDSCRIPT'
+          const { execSync } = require("child_process");
+          const prevTag = process.argv[2] || "";
+          const range = prevTag ? prevTag + "..HEAD" : "HEAD";
+          const log = execSync("git log " + range + " --pretty=format:%s --no-merges", { encoding: "utf8" });
+          const lines = log.trim().split("\n").filter(Boolean);
+          const cats = [
+            ["feat","Features"], ["fix","Bug Fixes"], ["refactor","Refactoring"],
+            ["perf","Performance"], ["docs","Documentation"], ["test","Tests"],
+            ["ci","CI"], ["chore","Chore"]
+          ];
+          const esc = (s) => s.replace(/@(browsercore|main|github)/g, "@\u200B$1");
+          const buckets = {};
+          const other = [];
+          for (const line of lines) {
+            const m = line.match(/^(feat|fix|refactor|perf|docs|test|ci|chore)(?:\(([^)]+)\))?:\s*(.+)/);
+            if (m) {
+              const cat = cats.find(c => c[0] === m[1]);
+              const key = cat[1];
+              if (!buckets[key]) buckets[key] = [];
+              const text = m[2] ? "**" + esc(m[2]) + "**: " + esc(m[3]) : esc(m[3]);
+              buckets[key].push("- " + text);
+            } else {
+              other.push("- " + esc(line));
             }
-
-            let output = "";
-            for (const cat of categories) {
-              const items = buckets.get(cat.label);
-              if (items && items.length > 0) {
-                output += `### ${cat.label}\n\n${items.join("\n")}\n\n`;
-              }
-            }
-            if (uncategorized.length > 0) {
-              output += `### Other Changes\n\n${uncategorized.join("\n")}\n\n`;
-            }
-            process.stdout.write(output.trim() || "Release published.");
-          ' "$PREV_TAG")
+          }
+          let out = "";
+          for (const [, label] of cats) {
+            if (buckets[label]) out += "### " + label + "\n\n" + buckets[label].join("\n") + "\n\n";
+          }
+          if (other.length) out += "### Other Changes\n\n" + other.join("\n") + "\n\n";
+          process.stdout.write(out.trim() || "Release published.");
+          ENDSCRIPT
+          CHANGELOG=$(node /tmp/changelog.js "$PREV_TAG")
 
           # Build release title from version + first feat/fix commit
-          TITLE_DESC=$(git log $RANGE --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//' | sed 's/@\(browsercore\|main\|github\)/@\&#8203;\1/g')
-          if [ -n "$TITLE_DESC" ]; then
-            TITLE="${TAG} — ${TITLE_DESC}"
-          else
-            TITLE="${TAG}"
-          fi
+          TITLE_DESC=$(git log "${PREV_TAG:+$PREV_TAG..}HEAD" --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//')
 
           # Create tag and release
           git config user.name "github-actions[bot]"
@@ -213,11 +182,11 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
-          # Escape @ in package name to prevent GitHub auto-linking as user mention
-          SAFE_NAME=$(echo "$NAME" | sed 's/@\(browsercore\)/@\&#8203;\1/g')
+          # Escape @ in package name to prevent GitHub auto-linking
+          SAFE_NAME=$(echo "$NAME" | sed 's/@/\\@/g')
           gh release create "$TAG" \
-            --title "$TITLE" \
-            --notes "$(echo -e "**${SAFE_NAME}@${VERSION}**\n\n${CHANGELOG}")"
+            --title "${TAG}${TITLE_DESC:+ — ${TITLE_DESC}}" \
+            --notes "$(printf '**%s@%s**\n\n%s' "$SAFE_NAME" "$VERSION" "$CHANGELOG")"
 
   deploy-pages:
     if: inputs.deploy-pages && github.event_name == 'push' && github.ref == 'refs/heads/main'
