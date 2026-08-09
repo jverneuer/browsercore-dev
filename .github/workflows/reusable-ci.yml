@@ -137,41 +137,36 @@ jobs:
           # Find the previous tag for the changelog range.
           PREV_TAG=$(git tag --sort=-v:refname | head -1)
 
-          # Generate categorized changelog (write to temp file to avoid bash quoting issues)
-          cat > /tmp/changelog.js << 'ENDSCRIPT'
-          const { execSync } = require("child_process");
-          const prevTag = process.argv[2] || "";
-          const range = prevTag ? prevTag + "..HEAD" : "HEAD";
-          const log = execSync("git log " + range + " --pretty=format:%s --no-merges", { encoding: "utf8" });
-          const lines = log.trim().split("\n").filter(Boolean);
-          const cats = [
-            ["feat","✨ Features"], ["fix","🐛 Bug Fixes"], ["refactor","♻️ Refactoring"],
-            ["perf","⚡ Performance"], ["docs","📚 Documentation"], ["test","🧪 Tests"],
-            ["ci","🔧 CI"], ["chore","🔧 Chore"]
-          ];
-          const esc = (s) => s.replace(/@(browsercore|main|github)/g, "@\u200B$1");
-          const buckets = {};
-          const other = [];
-          for (const line of lines) {
-            const m = line.match(/^(feat|fix|refactor|perf|docs|test|ci|chore)(?:\(([^)]+)\))?:\s*(.+)/);
-            if (m) {
-              const cat = cats.find(c => c[0] === m[1]);
-              const key = cat[1];
-              if (!buckets[key]) buckets[key] = [];
-              const text = m[2] ? "**" + esc(m[2]) + "**: " + esc(m[3]) : esc(m[3]);
-              buckets[key].push("- " + text);
-            } else {
-              other.push("- " + esc(line));
+          # Generate categorized changelog using node directly
+          CHANGELOG=$(node -e "
+            const { execSync } = require('child_process');
+            const prevTag = process.argv[1] || '';
+            const range = prevTag ? prevTag + '..HEAD' : 'HEAD';
+            const log = execSync('git log ' + range + ' --pretty=format:%s --no-merges', { encoding: 'utf8' });
+            const lines = log.trim().split('\n').filter(Boolean);
+            const cats = [['feat','Features'], ['fix','Bug Fixes'], ['refactor','Refactoring'], ['perf','Performance'], ['docs','Documentation'], ['test','Tests'], ['ci','CI'], ['chore','Chore']];
+            const esc = (s) => s.replace(/@(browsercore|main|github)/g, '@\u200B\$1');
+            const buckets = {};
+            const other = [];
+            for (const line of lines) {
+              const m = line.match(/^(feat|fix|refactor|perf|docs|test|ci|chore)(?:\(([^)]+)\))?:\s*(.+)/);
+              if (m) {
+                const cat = cats.find(c => c[0] === m[1]);
+                const key = cat[1];
+                if (!buckets[key]) buckets[key] = [];
+                const text = m[2] ? '**' + esc(m[2]) + '**: ' + esc(m[3]) : esc(m[3]);
+                buckets[key].push('- ' + text);
+              } else {
+                other.push('- ' + esc(line));
+              }
             }
-          }
-          let out = "";
-          for (const [, label] of cats) {
-            if (buckets[label]) out += "### " + label + "\n\n" + buckets[label].join("\n") + "\n\n";
-          }
-          if (other.length) out += "### Other Changes\n\n" + other.join("\n") + "\n\n";
-          process.stdout.write(out.trim() || "Release published.");
-          ENDSCRIPT
-          CHANGELOG=$(node /tmp/changelog.js "$PREV_TAG")
+            let out = '';
+            for (const [, label] of cats) {
+              if (buckets[label]) out += '### ' + label + '\n\n' + buckets[label].join('\n') + '\n\n';
+            }
+            if (other.length) out += '### Other Changes\n\n' + other.join('\n') + '\n\n';
+            process.stdout.write(out.trim() || 'Release published.');
+          " "$PREV_TAG")
 
           # Build release title from version + first feat/fix commit
           TITLE_DESC=$(git log "${PREV_TAG:+$PREV_TAG..}HEAD" --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//')
