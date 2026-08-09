@@ -98,6 +98,8 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 - **Consistency verification** — if more than 5 agents have touched the same folder or repo, dispatch a dedicated review agent to verify consistency: same patterns, same style, same conventions applied everywhere. Inconsistencies become a cleanup task.
 - **One agent per repo per phase** — don't send two agents into the same repo at the same time; they'll conflict on branches and files. Sequence them or merge their scope into one agent.
 - **Respect agent lifetime** — verify an agent is truly unresponsive (not just slow on mechanical changes) before killing it.
+- **PR gatekeeper is mandatory** — NO agent may run `gh pr create` directly. All PR creation goes through the pr-gatekeeper agent, which runs `scripts/validate-pr.ts` first. If validation fails, the PR is not opened. Period.
+- **Always run validate-pr before requesting a PR** — run `npx tsx scripts/validate-pr.ts --repo <path> --branch <branch>` locally before dispatching the gatekeeper. Fix any failures yourself first.
 
 | Agent | Type | Expertise |
 |-------|------|-----------|
@@ -109,6 +111,7 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 | fingerprint-engineer | specialist | Profiles, JA3/JA4, ClientHello |
 | test-engineer | specialist | E2E gates, coverage, golden captures |
 | integration-engineer | specialist | Browsersmith wiring, crawl API |
+| pr-gatekeeper | gatekeeper | The ONLY agent that opens PRs; runs validate-pr first |
 
 ### Agent Safety Rules
 
