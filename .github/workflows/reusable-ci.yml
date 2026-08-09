@@ -145,9 +145,9 @@ jobs:
           const log = execSync("git log " + range + " --pretty=format:%s --no-merges", { encoding: "utf8" });
           const lines = log.trim().split("\n").filter(Boolean);
           const cats = [
-            ["feat","Features"], ["fix","Bug Fixes"], ["refactor","Refactoring"],
-            ["perf","Performance"], ["docs","Documentation"], ["test","Tests"],
-            ["ci","CI"], ["chore","Chore"]
+            ["feat","✨ Features"], ["fix","🐛 Bug Fixes"], ["refactor","♻️ Refactoring"],
+            ["perf","⚡ Performance"], ["docs","📚 Documentation"], ["test","🧪 Tests"],
+            ["ci","🔧 CI"], ["chore","🔧 Chore"]
           ];
           const esc = (s) => s.replace(/@(browsercore|main|github)/g, "@\u200B$1");
           const buckets = {};
