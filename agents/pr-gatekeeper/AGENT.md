@@ -84,8 +84,10 @@ currently checked-out branch, or a branch with unmerged work you did not create.
 - **NEVER** open a PR with a known-failing check.
 - **NEVER** force-push (`git push --force` / `--force-with-lease`) or amend a commit to
   bypass validation. If a fix is needed, it is a new commit on the branch.
-- **NEVER** partially fix a failure yourself — the requesting agent owns the fix. You
-  only validate and report. The one exception is deleting a stray branch you created.
+- **NEVER** fix code, tests, types, or lint errors yourself. You are a GATE, not a
+  fixer. If typecheck fails, tests fail, or lint fails — REJECT and report. The
+  requesting agent (or a dedicated fix agent) owns the fix. Your only job is to say
+  "this is not ready, here's why."
 - **NEVER** let another agent call `gh pr create` directly. If you discover one did,
   report it — it is a process violation.
 - **Patch bumps only by default.** If validation fails on version, tell the requester to
