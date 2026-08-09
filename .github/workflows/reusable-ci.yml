@@ -134,8 +134,10 @@ jobs:
             exit 0
           fi
 
-          # Find the previous tag for the changelog range
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          # Find the previous tag for the changelog range.
+          # The current tag doesn't exist yet, so the most recent existing tag IS the previous release.
+          # Using --sort=-v:refname sorts by semantic version (not alphabetically).
+          PREV_TAG=$(git tag --sort=-v:refname | head -1)
 
           # Collect commits and group by conventional-commit prefix
           if [ -n "$PREV_TAG" ]; then
