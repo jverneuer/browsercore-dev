@@ -99,6 +99,7 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 - **One agent per repo per phase** — don't send two agents into the same repo at the same time; they'll conflict on branches and files. Sequence them or merge their scope into one agent.
 - **Respect agent lifetime** — verify an agent is truly unresponsive (not just slow on mechanical changes) before killing it.
 - **PR gatekeeper is mandatory** — NO agent may run `gh pr create` directly. All PR creation goes through the pr-gatekeeper agent, which runs `scripts/validate-pr.ts` first. If validation fails, the PR is not opened. Period.
+- **The gatekeeper does NOT fix code** — it is a pure validation gate. If typecheck, lint, or tests fail, it rejects and reports the exact failure. Fixing is owned by the requesting agent or a dedicated fix agent.
 - **Always run validate-pr before requesting a PR** — run `npx tsx scripts/validate-pr.ts --repo <path> --branch <branch>` locally before dispatching the gatekeeper. Fix any failures yourself first.
 
 | Agent | Type | Expertise |
@@ -112,6 +113,36 @@ Agent definitions: `agents/{type}/AGENT.md`. Every agent **must** read `.claude/
 | test-engineer | specialist | E2E gates, coverage, golden captures |
 | integration-engineer | specialist | Browsersmith wiring, crawl API |
 | pr-gatekeeper | gatekeeper | The ONLY agent that opens PRs; runs validate-pr first |
+
+### Task-to-Agent Routing (MANDATORY)
+
+**NEVER default to general-purpose.** Every task MUST be routed to the specialist that owns the repo/scope. Use this table to decide:
+
+| If the task involves... | Use this agent | Why |
+|------------------------|----------------|-----|
+| **quic**, **http3**, **http2**, **tls** repo fixes or tests | `protocol-engineer` | Owns TLS, HTTP/2, HTTP/3, QUIC byte-level work |
+| **crypto**, **compression**, **transport**, **contracts** repo fixes | `platform-engineer` | Owns Platform adapters, crypto, compression, transport |
+| **fetch**, **cookies**, **http1** repo fixes | `fetch-engineer` | Owns Fetch client, dispatch, connection pool, cookies |
+| **profiles** repo fixes, JA3/JA4 work | `fingerprint-engineer` | Owns profiles, fingerprint engineering |
+| **testing** repo fixes, coverage, E2E gates | `test-engineer` | Owns traffic-server, golden captures, coverage enforcement |
+| **browsersmith** repo fixes, crawl API, Platform wiring | `integration-engineer` | Owns the composition root where all packages meet |
+| **Creating or merging ANY PR** | `pr-gatekeeper` | The ONLY agent allowed to create/merge PRs |
+| **Multi-repo DAG dispatch** (3+ repos) | `top-orchestrator` | Owns DAG resolution and cross-repo parallel dispatch |
+| **Continuity from prior session** | `session-startup` | Owns memory summarization and task resumption |
+
+#### How to invoke a specialist
+
+1. Read the agent's AGENT.md: `agents/{type}/AGENT.md`
+2. Bake its rules, repos, and expertise into the subagent prompt
+3. Use `model: sonnet` (as specified in agent frontmatter) unless otherwise noted
+4. Dispatch one agent per repo per phase (parallel across repos, serial within a repo)
+
+#### Anti-patterns (process violations)
+
+- ❌ Using `general-purpose` for repo work when a specialist exists
+- ❌ Running `gh pr create` from a non-gatekeeper agent
+- ❌ Using `gatekeeper` to fix code (it only validates + merges)
+- ❌ Dispatching two agents into the same repo simultaneously
 
 ### Agent Safety Rules
 
