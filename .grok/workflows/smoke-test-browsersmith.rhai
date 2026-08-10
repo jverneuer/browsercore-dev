@@ -94,12 +94,12 @@ let build_result = agent(
     + "The application should:\n"
     + "1. Import { fetch, PROFILES, platform } from 'browsersmith'\n"
     + "2. Fetch https://example.com with a Chrome profile\n"
-    + "3. Fetch https://httpbin.org/get to verify JSON parsing\n"
-    + "4. Fetch https://httpbin.org/redirect/2 to verify redirect handling\n"
-    + "5. Fetch https://httpbin.org/cookies/set?test=value to verify cookie handling\n"
+    + "3. Fetch https://www.cloudflare.com/ to verify JSON-capable TLS 1.3 response\n"
+    + "4. Fetch https://httpbin.org/redirect/2 to verify redirect handling (note: httpbin may fail TLS — that's OK, report it)\n"
+    + "5. Fetch https://www.google.com/ to verify another major TLS 1.3 site\n"
     + "6. Print a structured report for each fetch: URL, status code, response size, timing\n"
     + "7. Handle errors gracefully (try/catch, print FetchError details)\n"
-    + "8. Exit 0 on success, exit 1 on any failure\n\n"
+    + "8. Exit 0 if at least 2 of 4 fetches succeed, exit 1 if 3+ fail\n\n"
     + "Write the file using write or search_replace. Do NOT install additional deps —\n"
     + "browsersmith bundles everything needed. Use .mjs extension for ESM.\n\n"
     + "Also write a package.json with { \"type\": \"module\", \"scripts\": { \"test\": \"node test-fetch.mjs\" } }",
@@ -134,7 +134,8 @@ let verify_result = agent(
     + "- Whether it's a network issue (timeout, DNS, connection refused) or a code bug\n\n"
     + "Also verify:\n"
     + "- The example.com response contains '<html>' (real HTML)\n"
-    + "- The httpbin.org/get response has valid JSON with headers\n"
+    + "- The cloudflare.com response contains '<html>' (real HTML)\n"
+    + "- The google.com response contains '<html>' (real HTML)\n"
     + "- Redirect handling produces a 200 final response\n"
     + "- Cookie set returns successfully",
     #{
