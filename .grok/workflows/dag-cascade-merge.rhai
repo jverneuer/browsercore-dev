@@ -37,7 +37,7 @@ let scan_jobs = [];
 for repo in all_repos {
     let r = repo;
     let prompt = "Check @browsercore/" + r + " repo state.\n"
-        + "cd /Users/matte/projects/jail/ruflo/basement/browsercore-" + r + " && "
+        + "cd /home/jens/Projects/browsercore-" + r + " && "
         + "echo 'BRANCH:' && git branch --show-current && "
         + "echo 'PRS:' && gh pr list --state open --json number,title,headRefName 2>/dev/null && "
         + "echo 'NPM:' && npm view @browsercore/" + r + " version 2>/dev/null && "
@@ -71,7 +71,7 @@ for repo in all_repos {
     let r = repo;
     let at = get_agent_for_repo(r);
     let prompt = "Check and fix CI for @browsercore/" + r + ".\n"
-        + "cd /Users/matte/projects/jail/ruflo/basement/browsercore-" + r + "\n"
+        + "cd /home/jens/Projects/browsercore-" + r + "\n"
         + "1. gh pr list --state open --json number,statusCheckRollup\n"
         + "2. If there's a PR with failing CI, read the failure logs:\n"
         + "   gh run view --log-failed --repo jverneuer/browsercore-" + r + "\n"
@@ -103,10 +103,10 @@ let merge_jobs = [];
 for repo in all_repos {
     let r = repo;
     let prompt = "Validate and merge the open PR for @browsercore/" + r + ".\n"
-        + "1. cd /Users/matte/projects/jail/ruflo/basement/browsercore-" + r + "\n"
+        + "1. cd /home/jens/Projects/browsercore-" + r + "\n"
         + "2. Get PR number: gh pr list --state open --json number\n"
-        + "3. Run validate-pr: npx tsx /Users/matte/projects/jail/ruflo/basement/browsercore-dev/scripts/validate-pr.ts"
-        + " --repo /Users/matte/projects/jail/ruflo/basement/browsercore-" + r
+        + "3. Run validate-pr: npx tsx /home/jens/Projects/browsercore-dev/scripts/validate-pr.ts"
+        + " --repo /home/jens/Projects/browsercore-" + r
         + " --branch $(git branch --show-current)\n"
         + "4. If validation passes and CI is green, merge:\n"
         + "   gh pr merge --squash --delete-branch --repo jverneuer/browsercore-" + r + "\n"
