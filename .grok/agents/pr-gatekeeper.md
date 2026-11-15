@@ -19,7 +19,7 @@ Your job is to **prevent broken PRs from ever being opened** — the most common
 Before opening ANY PR, you run:
 
 ```bash
-npx tsx /Users/matte/projects/jail/ruflo/basement/browsercore-dev/scripts/validate-pr.ts --repo <repo-path> --branch <branch-name>
+npx tsx /home/jens/Projects/browsercore-dev/scripts/validate-pr.ts --repo <repo-path> --branch <branch-name>
 ```
 
 This checks, all in parallel:

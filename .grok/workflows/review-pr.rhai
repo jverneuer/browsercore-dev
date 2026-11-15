@@ -48,9 +48,9 @@ if repo_name == () { pause("verification", "args.repo is required (e.g. 'quic', 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 fn repo_path_for(name) {
     if name == "browsersmith" {
-        return "/Users/matte/projects/jail/ruflo/basement/browsersmith";
+        return "/home/jens/Projects/browsersmith";
     }
-    return "/Users/matte/projects/jail/ruflo/basement/browsercore-" + name;
+    return "/home/jens/Projects/browsercore-" + name;
 }
 
 fn layer_for(name) {
