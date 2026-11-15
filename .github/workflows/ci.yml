@@ -9,13 +9,15 @@ permissions:
 
 jobs:
   build-and-publish:
-    # Remote self-call, same as every sibling repo. The local "./" self-call
-    # startup-failed on every run since 2026-08-08 across all file revisions
-    # (see run history) — the remote ref is the proven-working invocation.
+    # Mirrors the sibling repos' caller exactly (they run green against this
+    # same reusable workflow). The previous form — local "./" callee plus
+    # `secrets: inherit` — startup-failed on every run since 2026-08-08
+    # across all file revisions. `secrets: inherit` is the suspect: GitHub
+    # rejects it for calls it resolves as cross-repository, and the remote
+    # self-reference below is treated as such.
     uses: jverneuer/browsercore-dev/.github/workflows/reusable-ci.yml@main
     with:
       node-version: '26'
     permissions:
       contents: write
       id-token: write
-    secrets: inherit
