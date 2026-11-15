@@ -1,6 +1,6 @@
 # memory/index.md — Master Index
 
-Auto-maintained. Last updated: 2026-08-09 (DB rebuilt after .gitignore fix).
+Auto-maintained. Last updated: 2026-11-15 (dep alignment + h2 HPACK fix recorded).
 
 ## Open Questions (0)
 
@@ -17,11 +17,11 @@ platform-interface · transport-interface · event-provider
 ### patterns (2)
 platform-threading-pattern · polyrepo-dep-resolution
 
-### operational (5)
-npm-publish-flow · ci-reusable-workflow · current-version-landscape · repo-recovery-2026-08-09 · platform-refactor-status
+### operational (6)
+npm-publish-flow · ci-reusable-workflow · current-version-landscape · repo-recovery-2026-08-09 · platform-refactor-status · dep-alignment-2026-11-15
 
-### bugs (2)
-bug6-key-schedule · bug2-adapter-fallback
+### bugs (3)
+bug6-key-schedule · bug2-adapter-fallback · h2-hpack-reuse-desync (FIXED in 0.2.10, pending PR)
 
 ## Confidence Distribution
 
