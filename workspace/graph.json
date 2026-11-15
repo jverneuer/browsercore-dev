@@ -2,7 +2,7 @@
   "nodes": {
     "@browsercore/compression": {
       "name": "@browsercore/compression",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repo": "jverneuer/browsercore-compression",
       "dir": "browsercore-compression",
       "deps": [],
@@ -10,7 +10,7 @@
     },
     "@browsercore/contracts": {
       "name": "@browsercore/contracts",
-      "version": "0.2.0",
+      "version": "0.2.4",
       "repo": "jverneuer/browsercore-contracts",
       "dir": "browsercore-contracts",
       "deps": [],
@@ -26,7 +26,7 @@
     },
     "@browsercore/crypto": {
       "name": "@browsercore/crypto",
-      "version": "0.2.1",
+      "version": "0.2.5",
       "repo": "jverneuer/browsercore-crypto",
       "dir": "browsercore-crypto",
       "deps": [],
@@ -34,7 +34,7 @@
     },
     "@browsercore/dev": {
       "name": "@browsercore/dev",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repo": "jverneuer/browsercore-dev",
       "dir": "browsercore-dev",
       "deps": [],
@@ -42,7 +42,7 @@
     },
     "@browsercore/devtools": {
       "name": "@browsercore/devtools",
-      "version": "0.2.0",
+      "version": "0.2.3",
       "repo": "jverneuer/browsercore-devtools",
       "dir": "browsercore-devtools",
       "deps": [
@@ -59,7 +59,7 @@
     },
     "@browsercore/fetch": {
       "name": "@browsercore/fetch",
-      "version": "0.2.4",
+      "version": "0.2.16",
       "repo": "jverneuer/browsercore-fetch",
       "dir": "browsercore-fetch",
       "deps": [
@@ -77,7 +77,7 @@
     },
     "@browsercore/http1": {
       "name": "@browsercore/http1",
-      "version": "0.2.0",
+      "version": "0.2.2",
       "repo": "jverneuer/browsercore-http1",
       "dir": "browsercore-http1",
       "deps": [
@@ -88,10 +88,11 @@
     },
     "@browsercore/http2": {
       "name": "@browsercore/http2",
-      "version": "0.2.2",
+      "version": "0.2.10",
       "repo": "jverneuer/browsercore-http2",
       "dir": "browsercore-http2",
       "deps": [
+        "@browsercore/contracts",
         "@browsercore/transport",
         "@browsercore/crypto"
       ],
@@ -99,10 +100,11 @@
     },
     "@browsercore/http3": {
       "name": "@browsercore/http3",
-      "version": "0.1.6",
+      "version": "0.1.8",
       "repo": "jverneuer/browsercore-http3",
       "dir": "browsercore-http3",
       "deps": [
+        "@browsercore/contracts",
         "@browsercore/quic",
         "@browsercore/transport"
       ],
@@ -110,18 +112,30 @@
     },
     "@browsercore/profiles": {
       "name": "@browsercore/profiles",
-      "version": "0.2.0",
+      "version": "0.2.3",
       "repo": "jverneuer/browsercore-profiles",
       "dir": "browsercore-profiles",
       "deps": [],
       "layer": 0
     },
+    "@browsercore/proxy": {
+      "name": "@browsercore/proxy",
+      "version": "0.1.0",
+      "repo": "jverneuer/browsercore-proxy",
+      "dir": "browsercore-proxy",
+      "deps": [
+        "@browsercore/contracts",
+        "@browsercore/dev"
+      ],
+      "layer": 1
+    },
     "@browsercore/quic": {
       "name": "@browsercore/quic",
-      "version": "0.2.1",
+      "version": "0.2.4",
       "repo": "jverneuer/browsercore-quic",
       "dir": "browsercore-quic",
       "deps": [
+        "@browsercore/contracts",
         "@browsercore/crypto",
         "@browsercore/tls",
         "@browsercore/transport"
@@ -130,11 +144,12 @@
     },
     "@browsercore/testing": {
       "name": "@browsercore/testing",
-      "version": "0.2.0",
+      "version": "0.2.8",
       "repo": "jverneuer/browsercore-testing",
       "dir": "browsercore-testing",
       "deps": [
         "@browsercore/compression",
+        "@browsercore/contracts",
         "@browsercore/cookies",
         "@browsercore/crypto",
         "@browsercore/fetch",
@@ -149,10 +164,11 @@
     },
     "@browsercore/tls": {
       "name": "@browsercore/tls",
-      "version": "0.4.1",
+      "version": "0.4.13",
       "repo": "jverneuer/browsercore-tls",
       "dir": "browsercore-tls",
       "deps": [
+        "@browsercore/contracts",
         "@browsercore/transport",
         "@browsercore/crypto"
       ],
@@ -160,7 +176,7 @@
     },
     "@browsercore/transport": {
       "name": "@browsercore/transport",
-      "version": "0.2.4",
+      "version": "0.2.7",
       "repo": "jverneuer/browsercore-transport",
       "dir": "browsercore-transport",
       "deps": [
@@ -170,7 +186,7 @@
     },
     "browsersmith": {
       "name": "browsersmith",
-      "version": "0.0.4",
+      "version": "0.0.14",
       "repo": "jverneuer/browsersmith",
       "dir": "browsersmith",
       "deps": [
@@ -185,7 +201,8 @@
         "@browsercore/profiles",
         "@browsercore/quic",
         "@browsercore/tls",
-        "@browsercore/transport"
+        "@browsercore/transport",
+        "@browsercore/testing"
       ],
       "layer": 5
     }
@@ -200,6 +217,7 @@
       "@browsercore/profiles"
     ],
     [
+      "@browsercore/proxy",
       "@browsercore/transport"
     ],
     [

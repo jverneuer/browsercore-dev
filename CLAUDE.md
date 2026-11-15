@@ -214,6 +214,7 @@ All repos live under `../` (sibling directories). Each is its own git repo:
 | @browsercore/profiles | jverneuer/browsercore-profiles | 0 |
 | @browsercore/dev | jverneuer/browsercore-dev | 0 |
 | @browsercore/transport | jverneuer/browsercore-transport | 1 |
+| @browsercore/proxy | jverneuer/browsercore-proxy | 1 |
 | @browsercore/tls | jverneuer/browsercore-tls | 2 |
 | @browsercore/http1 | jverneuer/browsercore-http1 | 2 |
 | @browsercore/http2 | jverneuer/browsercore-http2 | 2 |

@@ -76,6 +76,7 @@ const REPO_DIRS = [
     "browsercore-http2",
     "browsercore-http3",
     "browsercore-profiles",
+    "browsercore-proxy",
     "browsercore-quic",
     "browsercore-testing",
     "browsercore-tls",
