@@ -9,7 +9,10 @@ permissions:
 
 jobs:
   build-and-publish:
-    uses: ./.github/workflows/reusable-ci.yml
+    # Remote self-call, same as every sibling repo. The local "./" self-call
+    # startup-failed on every run since 2026-08-08 across all file revisions
+    # (see run history) — the remote ref is the proven-working invocation.
+    uses: jverneuer/browsercore-dev/.github/workflows/reusable-ci.yml@main
     with:
       node-version: '26'
     permissions:
