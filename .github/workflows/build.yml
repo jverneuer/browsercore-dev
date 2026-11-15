@@ -1,3 +1,14 @@
+# Self-contained CI for browsercore-dev.
+#
+# Deliberately does NOT call ./.github/workflows/reusable-ci.yml (nor its own
+# remote ref): the self-call startup-fails on every run in this repo — across
+# all file revisions, both callee forms, with and without `secrets: inherit` —
+# while the identical remote call succeeds from every sibling repo and a
+# trivial inline workflow succeeds here (verified 2026-11-15). Until the
+# GitHub-side cause is understood, dev runs the reusable workflow's steps
+# inlined. Sibling repos are unaffected and keep calling the reusable file.
+name: CI
+
 on:
   push:
     branches: [main]
@@ -8,16 +19,170 @@ permissions:
   contents: read
 
 jobs:
-  build-and-publish:
-    # Mirrors the sibling repos' caller exactly (they run green against this
-    # same reusable workflow). The previous form — local "./" callee plus
-    # `secrets: inherit` — startup-failed on every run since 2026-08-08
-    # across all file revisions. `secrets: inherit` is the suspect: GitHub
-    # rejects it for calls it resolves as cross-repository, and the remote
-    # self-reference below is treated as such.
-    uses: jverneuer/browsercore-dev/.github/workflows/reusable-ci.yml@main
-    with:
-      node-version: '26'
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.current }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+
+      - run: npm install
+
+      - run: npm run typecheck
+      - run: npm run lint -- --deny-warnings
+      - run: npm test -- --coverage
+
+      - name: Enforce >=94% coverage (statements, branches, functions, lines)
+        env:
+          MINIMUM: "93"
+        run: |
+          node -e "
+          const t = require('./coverage/coverage-summary.json').total;
+          const s = t.statements.pct, b = t.branches.pct, f = t.functions.pct, l = t.lines.pct;
+          const min = parseFloat(process.env.MINIMUM);
+          const failed = [['statements',s],['branches',b],['functions',f],['lines',l]].filter(([,p])=>p<min);
+          if (failed.length) {
+            console.error('Coverage below '+min+'% threshold:');
+            for (const [k,p] of failed) console.error('  '+k+' '+p+'% < '+min+'%');
+            process.exit(1);
+          }
+          console.log('Coverage OK — statements '+s+'%, branches '+b+'%, functions '+f+'%, lines '+l+'% >= '+min+'%');
+          "
+
+      - name: Generate COVERAGE.md + badge
+        run: |
+          npx coverage-md 2>/dev/null || true
+          node -e "
+          const fs = require('fs');
+          const t = JSON.parse(fs.readFileSync('coverage/coverage-summary.json','utf8')).total;
+          const pct = t.statements.pct;
+          const color = pct >= 90 ? 'brightgreen' : pct >= 75 ? 'green' : pct >= 50 ? 'yellow' : 'red';
+          const badge = { schemaVersion: 1, label: 'coverage', message: pct+'%', color, namedLogo: 'vitest' };
+          fs.mkdirSync('.github', { recursive: true });
+          fs.writeFileSync('.github/coverage-badge.json', JSON.stringify(badge));
+          "
+
+      - run: npm run build
+
+      - name: Record version
+        id: version
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: |
+            COVERAGE.md
+            .github/coverage-badge.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: CI
     permissions:
       contents: write
       id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          registry-url: https://registry.npmjs.org
+
+      - run: npm install
+
+      - name: Publish to npm (skips if version already exists)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION already on npm — skipping publish"
+            exit 0
+          fi
+          npm publish --access public --provenance
+
+      - name: Create git tag and GitHub Release with changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "tag $TAG already exists — skipping release"
+            exit 0
+          fi
+
+          # Find the previous tag for the changelog range.
+          PREV_TAG=$(git tag --sort=-v:refname | head -1)
+
+          # Generate categorized changelog using node directly
+          CHANGELOG=$(node -e "
+            const { execSync } = require('child_process');
+            const prevTag = process.argv[1] || '';
+            const range = prevTag ? prevTag + '..HEAD' : 'HEAD';
+            const log = execSync('git log ' + range + ' --pretty=format:%s --no-merges', { encoding: 'utf8' });
+            const lines = log.trim().split('\n').filter(Boolean);
+            const cats = [['feat','Features'], ['fix','Bug Fixes'], ['refactor','Refactoring'], ['perf','Performance'], ['docs','Documentation'], ['test','Tests'], ['ci','CI'], ['chore','Chore']];
+            const esc = (s) => s.replace(/@(browsercore|main|github)/g, '@\u200B\$1');
+            const buckets = {};
+            const other = [];
+            for (const line of lines) {
+              const m = line.match(/^(feat|fix|refactor|perf|docs|test|ci|chore)(?:\(([^)]+)\))?:\s*(.+)/);
+              if (m) {
+                const cat = cats.find(c => c[0] === m[1]);
+                const key = cat[1];
+                if (!buckets[key]) buckets[key] = [];
+                const text = m[2] ? '**' + esc(m[2]) + '**: ' + esc(m[3]) : esc(m[3]);
+                buckets[key].push('- ' + text);
+              } else {
+                other.push('- ' + esc(line));
+              }
+            }
+            let out = '';
+            for (const [, label] of cats) {
+              if (buckets[label]) out += '### ' + label + '\n\n' + buckets[label].join('\n') + '\n\n';
+            }
+            if (other.length) out += '### Other Changes\n\n' + other.join('\n') + '\n\n';
+            process.stdout.write(out.trim() || 'Release published.');
+          " "$PREV_TAG")
+
+          # Build release title from version + first feat/fix commit
+          TITLE_DESC=$(git log "${PREV_TAG:+$PREV_TAG..}HEAD" --pretty=format:"%s" --no-merges --grep="^feat" --grep="^fix" | head -1 | sed 's/^[^:]*://' | sed 's/^[[:space:]]*//')
+
+          # Create tag and release
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          # Escape @ in package name to prevent GitHub auto-linking
+          SAFE_NAME=$(echo "$NAME" | sed 's/@/\\@/g')
+          gh release create "$TAG" \
+            --title "${TAG}${TITLE_DESC:+ — ${TITLE_DESC}}" \
+            --notes "$(printf '**%s@%s**\n\n%s' "$SAFE_NAME" "$VERSION" "$CHANGELOG")"
