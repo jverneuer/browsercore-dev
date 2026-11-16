@@ -81,6 +81,7 @@ const REPO_DIRS = [
     "browsercore-testing",
     "browsercore-tls",
     "browsercore-transport",
+    "browsercore-crawlee",
     "browsersmith",
 ];
 

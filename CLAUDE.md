@@ -224,6 +224,7 @@ All repos live under `../` (sibling directories). Each is its own git repo:
 | @browsercore/http3 | jverneuer/browsercore-http3 | 4 |
 | @browsercore/devtools | jverneuer/browsercore-devtools | 4 |
 | browsersmith | jverneuer/browsersmith | 5 |
+| @browsercore/crawlee | jverneuer/browsercore-crawlee | 5 |
 
 ## Coding Standards
 
