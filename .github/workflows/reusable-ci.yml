@@ -110,9 +110,12 @@ jobs:
 
       - run: npm install
 
+      # Publishes via npm OIDC trusted publishing (no token) — every caller
+      # repo registers this job's entry workflow as its trusted publisher
+      # (owner jverneuer, repo = caller, workflow filename, environment CI).
+      # Do NOT re-add NODE_AUTH_TOKEN: a present token (even empty via .npmrc)
+      # can override OIDC auth.
       - name: Publish to npm (skips if version already exists)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           NAME=$(node -p "require('./package.json').name")
