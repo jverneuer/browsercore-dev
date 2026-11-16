@@ -81,6 +81,11 @@ node scripts/coverage-md.mjs    # writes COVERAGE.md + coverage/badge.json
 
 Provider is `@vitest/coverage-v8`. The report is generated from `coverage/coverage-summary.json`.
 
+
+## Contributing
+
+Contributions are welcome — bug reports, reproductions, docs and code alike. Start with [CONTRIBUTING.md](CONTRIBUTING.md); the full guide lives in the [browsersmith repo](https://github.com/jverneuer/browsersmith/blob/main/CONTRIBUTING.md). First timer? Check the [`good first issue`](https://github.com/jverneuer/browsercore-dev/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label. Security issues: [SECURITY.md](SECURITY.md), never a public issue.
+
 ## License
 
 MIT
