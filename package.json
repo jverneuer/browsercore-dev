@@ -1,6 +1,6 @@
 {
     "name": "@browsercore/dev",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Shared build, lint, test, and coverage tooling for the @browsercore/* packages.",
     "license": "MIT",
     "repository": {
