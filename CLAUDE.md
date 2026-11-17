@@ -1,6 +1,6 @@
 # @browsercore/dev — Swarm Control Plane
 
-This repo is the **orchestration hub** for the @browsercore polyrepo (16 independent
+This repo is the **orchestration hub** for the @browsercore polyrepo (19 independent
 git repos). It is NOT a monorepo — each repo publishes independently to npm.
 
 ## Session Start Protocol (MANDATORY)
@@ -30,7 +30,7 @@ Then WAIT for the user's choice.
 
 ## Dependency Graph
 
-The 16 repos form a 6-layer DAG. View it with:
+The 19 repos form a 6-layer DAG. View it with:
 
 ```bash
 npx tsx scripts/resolve-graph.ts
@@ -215,6 +215,7 @@ All repos live under `../` (sibling directories). Each is its own git repo:
 | @browsercore/dev | jverneuer/browsercore-dev | 0 |
 | @browsercore/transport | jverneuer/browsercore-transport | 1 |
 | @browsercore/proxy | jverneuer/browsercore-proxy | 1 |
+| @browsercore/platform-workers | jverneuer/browsercore-platform-workers | 1 |
 | @browsercore/tls | jverneuer/browsercore-tls | 2 |
 | @browsercore/http1 | jverneuer/browsercore-http1 | 2 |
 | @browsercore/http2 | jverneuer/browsercore-http2 | 2 |
