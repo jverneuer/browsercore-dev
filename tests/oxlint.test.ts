@@ -28,7 +28,7 @@ describe("oxlintBase", () => {
     });
 
     it("sets node env to true", () => {
-        expect(oxlintBase.env?.node).toBe(true);
+        expect(oxlintBase.env?.["node"]).toBe(true);
     });
 
     it("sets correctness category to error", () => {
