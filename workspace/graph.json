@@ -59,7 +59,7 @@
     },
     "@browsercore/fetch": {
       "name": "@browsercore/fetch",
-      "version": "0.2.19",
+      "version": "0.2.22",
       "repo": "jverneuer/browsercore-fetch",
       "dir": "browsercore-fetch",
       "deps": [
@@ -78,7 +78,7 @@
     },
     "@browsercore/http1": {
       "name": "@browsercore/http1",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "repo": "jverneuer/browsercore-http1",
       "dir": "browsercore-http1",
       "deps": [
@@ -89,7 +89,7 @@
     },
     "@browsercore/http2": {
       "name": "@browsercore/http2",
-      "version": "0.2.11",
+      "version": "0.2.12",
       "repo": "jverneuer/browsercore-http2",
       "dir": "browsercore-http2",
       "deps": [
@@ -113,11 +113,22 @@
     },
     "@browsercore/profiles": {
       "name": "@browsercore/profiles",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "repo": "jverneuer/browsercore-profiles",
       "dir": "browsercore-profiles",
       "deps": [],
       "layer": 0
+    },
+    "@browsercore/platform-workers": {
+      "name": "@browsercore/platform-workers",
+      "version": "0.1.0",
+      "repo": "jverneuer/browsercore-platform-workers",
+      "dir": "browsercore-platform-workers",
+      "deps": [
+        "@browsercore/contracts",
+        "@browsercore/dev"
+      ],
+      "layer": 1
     },
     "@browsercore/proxy": {
       "name": "@browsercore/proxy",
@@ -177,7 +188,7 @@
     },
     "@browsercore/transport": {
       "name": "@browsercore/transport",
-      "version": "0.2.7",
+      "version": "0.2.8",
       "repo": "jverneuer/browsercore-transport",
       "dir": "browsercore-transport",
       "deps": [
@@ -187,18 +198,21 @@
     },
     "@browsercore/crawlee": {
       "name": "@browsercore/crawlee",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "repo": "jverneuer/browsercore-crawlee",
       "dir": "browsercore-crawlee",
       "deps": [
+        "@browsercore/fetch",
         "@browsercore/transport",
-        "@browsercore/dev"
+        "@browsercore/dev",
+        "@browsercore/http2",
+        "@browsercore/testing"
       ],
-      "layer": 2
+      "layer": 5
     },
     "browsersmith": {
       "name": "browsersmith",
-      "version": "0.0.16",
+      "version": "0.0.17",
       "repo": "jverneuer/browsersmith",
       "dir": "browsersmith",
       "deps": [
@@ -230,11 +244,11 @@
       "@browsercore/profiles"
     ],
     [
+      "@browsercore/platform-workers",
       "@browsercore/proxy",
       "@browsercore/transport"
     ],
     [
-      "@browsercore/crawlee",
       "@browsercore/http1",
       "@browsercore/http2",
       "@browsercore/tls"
@@ -249,6 +263,7 @@
       "@browsercore/testing"
     ],
     [
+      "@browsercore/crawlee",
       "browsersmith"
     ]
   ],
