@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@browsercore/dev.svg)](https://www.npmjs.com/package/@browsercore/dev)
 [![coverage](https://img.shields.io/endpoint?url=https://jverneuer.github.io/browsercore-dev/badge.json)](https://github.com/jverneuer/browsercore-dev/blob/main/COVERAGE.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/jverneuer/browsercore-dev/build.yml?label=ci)](https://github.com/jverneuer/browsercore-dev/actions/workflows/build.yml)
 [![license](https://img.shields.io/npm/l/@browsercore/dev.svg)](LICENSE)
 
 Shared build, lint, test, and coverage tooling for every `@browsercore/*` package. One published package is the single source of truth; consumers extend it live via npm.
