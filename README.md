@@ -38,7 +38,7 @@ To genuinely typecheck tests (vitest only transpiles them), add a `tsconfig.test
 "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit"
 ```
 
-The base includes `src/**/*.ts` + `tests/**/*.ts` under `noEmit` and **overrides `exclude`** — the repo tsconfig's `exclude: [..., "tests"]` (correct for builds) would otherwise nullify the test `include`, and the gate would silently typecheck zero test files.
+The base includes `src/**/*.ts` + `tests/**/*.ts` under `noEmit` and **overrides `exclude`**. The repo tsconfig's `exclude: [..., "tests"]` (correct for builds) would otherwise nullify the test `include`, and the gate would silently typecheck zero test files.
 
 ### vitest
 
@@ -97,7 +97,7 @@ Provider is `@vitest/coverage-v8`. The report is generated from `coverage/covera
 
 ## Contributing
 
-Contributions are welcome — bug reports, reproductions, docs and code alike. Start with [CONTRIBUTING.md](CONTRIBUTING.md); the full guide lives in the [browsersmith repo](https://github.com/jverneuer/browsersmith/blob/main/CONTRIBUTING.md). First timer? Check the [`good first issue`](https://github.com/jverneuer/browsercore-dev/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label. Security issues: [SECURITY.md](SECURITY.md), never a public issue.
+Contributions are welcome: bug reports, reproductions, docs and code alike. Start with [CONTRIBUTING.md](CONTRIBUTING.md); the full guide lives in the [browsersmith repo](https://github.com/jverneuer/browsersmith/blob/main/CONTRIBUTING.md). First timer? Check the [`good first issue`](https://github.com/jverneuer/browsercore-dev/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label. Security issues: [SECURITY.md](SECURITY.md), never a public issue.
 
 ## License
 
