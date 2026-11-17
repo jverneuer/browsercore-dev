@@ -1,6 +1,24 @@
 import { describe, it, expect } from "vitest";
 import { definePackageConfig } from "../src/vitest.js";
 
+/**
+ * Coverage block shape produced by `definePackageConfig`, including keys that
+ * only exist when a consumer forwards them through the coverage-override
+ * spread (e.g. `statementsThreshold`). One named shape instead of per-test
+ * inline casts, so assertions can never drift from the asserted keys.
+ */
+interface CoverageConfig {
+    readonly provider: string;
+    readonly include: readonly string[];
+    readonly reporter: readonly string[];
+    readonly exclude?: readonly string[];
+    readonly statementsThreshold?: number;
+    readonly branchesThreshold?: number;
+}
+
+const coverageOf = (config: ReturnType<typeof definePackageConfig>): CoverageConfig =>
+    config.test?.coverage as CoverageConfig;
+
 describe("definePackageConfig", () => {
     it("returns a config with the provided package name", () => {
         const config = definePackageConfig({ name: "crypto" });
@@ -44,19 +62,19 @@ describe("definePackageConfig", () => {
 
     it("configures v8 coverage provider", () => {
         const config = definePackageConfig({ name: "crypto" });
-        const coverage = config.test?.coverage as { provider: string; include: string[]; reporter: string[] };
+        const coverage = coverageOf(config);
         expect(coverage.provider).toBe("v8");
     });
 
     it("covers src/**/*.ts by default", () => {
         const config = definePackageConfig({ name: "crypto" });
-        const coverage = config.test?.coverage as { provider: string; include: string[]; reporter: string[] };
+        const coverage = coverageOf(config);
         expect(coverage.include).toEqual(["src/**/*.ts"]);
     });
 
     it("uses text, html, json-summary reporters", () => {
         const config = definePackageConfig({ name: "crypto" });
-        const coverage = config.test?.coverage as { provider: string; include: string[]; reporter: string[] };
+        const coverage = coverageOf(config);
         expect(coverage.reporter).toEqual(["text", "html", "json-summary"]);
     });
 
@@ -65,12 +83,7 @@ describe("definePackageConfig", () => {
             name: "crypto",
             coverage: { exclude: ["tests/**"] },
         });
-        const coverage = config.test?.coverage as {
-            provider: string;
-            include: string[];
-            reporter: string[];
-            exclude?: string[];
-        };
+        const coverage = coverageOf(config);
         expect(coverage.exclude).toContain("**/index.ts");
         expect(coverage.exclude).toContain("tests/**");
         expect(coverage.exclude).toContain("node_modules/**");
@@ -89,7 +102,7 @@ describe("definePackageConfig", () => {
 
     it("defaults exclude to the three protected glob patterns in order", () => {
         const config = definePackageConfig({ name: "crypto" });
-        const coverage = config.test?.coverage as { exclude?: string[] };
+        const coverage = coverageOf(config);
         expect(coverage.exclude).toEqual(["**/index.ts", "tests/**", "node_modules/**"]);
     });
 
@@ -98,7 +111,7 @@ describe("definePackageConfig", () => {
             name: "crypto",
             coverage: { exclude: ["scripts/**", "bin/**"] },
         });
-        const coverage = config.test?.coverage as { exclude?: string[] };
+        const coverage = coverageOf(config);
         expect(coverage.exclude).toEqual([
             "**/index.ts",
             "tests/**",
@@ -113,7 +126,7 @@ describe("definePackageConfig", () => {
             name: "crypto",
             coverage: { statementsThreshold: 94, branchesThreshold: 80 },
         });
-        const coverage = config.test?.coverage as { statementsThreshold?: number; branchesThreshold?: number };
+        const coverage = coverageOf(config);
         expect(coverage.statementsThreshold).toBe(94);
         expect(coverage.branchesThreshold).toBe(80);
         // defaults are still wired in

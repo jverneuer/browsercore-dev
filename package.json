@@ -1,6 +1,6 @@
 {
     "name": "@browsercore/dev",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "Shared build, lint, test, and coverage tooling for the @browsercore/* packages.",
     "license": "MIT",
     "repository": {
@@ -30,6 +30,7 @@
         },
         "./tsconfig.base.json": "./tsconfig.base.json",
         "./tsconfig.build.base.json": "./tsconfig.build.base.json",
+        "./tsconfig.test.base.json": "./tsconfig.test.base.json",
         "./CODING_STANDARDS.md": "./CODING_STANDARDS.md"
     },
     "bin": {
@@ -40,6 +41,7 @@
         "bin",
         "tsconfig.base.json",
         "tsconfig.build.base.json",
+        "tsconfig.test.base.json",
         "CODING_STANDARDS.md",
         "LICENSE"
     ],
@@ -48,7 +50,7 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
         "test": "vitest run",
         "lint": "oxlint --type-aware src/",
         "clean": "rm -rf dist coverage",

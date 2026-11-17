@@ -28,6 +28,18 @@ npm install -D @browsercore/dev
 
 For builds that emit declarations, extend `@browsercore/dev/tsconfig.build.base.json` instead (layers `declaration`, `declarationMap`, `sourceMap` on top of the base).
 
+To genuinely typecheck tests (vitest only transpiles them), add a `tsconfig.test.json` extending `@browsercore/dev/tsconfig.test.base.json` and wire it as the second half of `npm run typecheck`:
+
+```json
+{ "extends": "@browsercore/dev/tsconfig.test.base.json" }
+```
+
+```json
+"typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit"
+```
+
+The base includes `src/**/*.ts` + `tests/**/*.ts` under `noEmit` and **overrides `exclude`**. The repo tsconfig's `exclude: [..., "tests"]` (correct for builds) would otherwise nullify the test `include`, and the gate would silently typecheck zero test files.
+
 ### vitest
 
 ```ts
@@ -66,7 +78,7 @@ The bin reads `coverage/coverage-summary.json` (written by the `json-summary` re
 
 | Command | Runs |
 | --- | --- |
-| `npm run typecheck` | `tsc -p tsconfig.json --noEmit` |
+| `npm run typecheck` | `tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit` |
 | `npm run lint` | `oxlint --type-aware src/` |
 | `npm test` | `vitest run` |
 | `npm run build` | `tsc -p tsconfig.build.json` |
@@ -85,7 +97,7 @@ Provider is `@vitest/coverage-v8`. The report is generated from `coverage/covera
 
 ## Contributing
 
-Contributions are welcome — bug reports, reproductions, docs and code alike. Start with [CONTRIBUTING.md](CONTRIBUTING.md); the full guide lives in the [browsersmith repo](https://github.com/jverneuer/browsersmith/blob/main/CONTRIBUTING.md). First timer? Check the [`good first issue`](https://github.com/jverneuer/browsercore-dev/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label. Security issues: [SECURITY.md](SECURITY.md), never a public issue.
+Contributions are welcome: bug reports, reproductions, docs and code alike. Start with [CONTRIBUTING.md](CONTRIBUTING.md); the full guide lives in the [browsersmith repo](https://github.com/jverneuer/browsersmith/blob/main/CONTRIBUTING.md). First timer? Check the [`good first issue`](https://github.com/jverneuer/browsercore-dev/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label. Security issues: [SECURITY.md](SECURITY.md), never a public issue.
 
 ## License
 

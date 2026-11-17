@@ -1,0 +1,10 @@
+{
+    // Dual typecheck gate (run by `npm run typecheck`): compiles src/ AND the
+    // tests so vitest's transpile-only run can no longer hide type errors in
+    // test files.
+    //
+    // Dogfoods the shipped ./tsconfig.test.base.json — the exact artifact
+    // consumers extend — instead of re-deriving the shape locally, so dev's
+    // own gate fails if the exported base ever breaks.
+    "extends": "./tsconfig.test.base.json"
+}

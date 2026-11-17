@@ -1,0 +1,23 @@
+{
+    // Shared TEST typecheck base for every @browsercore/* package — the second
+    // half of the dual typecheck gate: `tsc -p tsconfig.test.json --noEmit`.
+    //
+    // A consumer's tsconfig.test.json is a one-liner:
+    //   { "extends": "@browsercore/dev/tsconfig.test.base.json" }
+    //
+    // `exclude` is DECLARED here on purpose instead of being inherited from the
+    // repo tsconfig: family tsconfigs exclude "tests" (so `npm run build` never
+    // compiles test files). If a test config extends the repo tsconfig without
+    // overriding exclude, its `include` of tests/** matches nothing and the
+    // gate silently typechecks zero test files.
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": false,
+        "rootDir": "."
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts"],
+    "exclude": ["node_modules", "dist"]
+}

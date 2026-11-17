@@ -5,3 +5,4 @@ coverage/
 .DS_Store
 .aider*
 .memory/*.db-shm
+.zcode/
