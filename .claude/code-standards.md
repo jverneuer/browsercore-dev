@@ -187,6 +187,20 @@ error codes are wrapped at the provider boundary into typed errors and never lea
 
 ---
 
+## 22. Canonical contracts — the platform-v2 invariants (2026-11-17)
+
+The replaceability audit's remediation program made these binding:
+
+- **ONE definition per cross-package concept, in `@browsercore/contracts`**: Transport, CryptoProvider, CompressionProvider, Clock (Time), ProxyConfig, ProfileId, TlsHandshakeEngine. Implementing packages RE-EXPORT the canonical type (see transport 0.2.9, crypto 0.2.6, proxy 0.1.4, profiles 0.2.6) — never re-declare. If a shape doesn't fit, change the CONTRACT, not the call site.
+- **`as unknown as` between @browsercore types is banned.** If two of our types don't line up, one of them is wrong.
+- **Protocol packages never import sibling engines.** The pattern is injection: options accept an interface (contracts' TlsHandshakeEngine is the reference — quic 0.2.7 consumes it, tls implements it, browsersmith wires it). http3's fake-quic structural contract + e2e fake is the sanctioned proof pattern for any replacement implementation.
+- **Time flows through an injected Clock** (`options.clock ?? platform.time ?? systemClock`). No bare `setTimeout`/`Date.now()` in protocol-package src (the systemClock default body is the only sanctioned global draw). Deadlines use `monotonic()`, never wall-clock deltas. Timer handles are the opaque `TimerHandle`.
+- **Platform bundles are optional; capability absence is typed.** Consumers resolve what they use and throw typed errors naming the missing capability. `Network.udp` is a factory (`UdpSocketFactory`) — per-connection sockets, never import-time bindings.
+- **Crypto/Compression are synchronous BY DESIGN** (docs/design-decisions.md in contracts). Do not claim WebCrypto/CompressionStream as backends — they cannot implement the interfaces.
+- **Composition roots construct eagerly nowhere**: lazy getters for exported singletons (browsersmith's `platform`), `./core`-style runtime-free entry points for edge consumers.
+
+---
+
 ## Lint (oxlint)
 
 Plugins: `typescript`, `unicorn`, `import`. All correctness/suspicious/pedantic rules are errors.

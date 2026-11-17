@@ -47,6 +47,8 @@ Layer 5:          browsersmith (entry point)
 
 Work flows bottom-up: fix contracts → bump transport → bump tls/fetch → bump browsersmith.
 
+**Canonical-type rule (2026-11-17):** all cross-package types live in @browsercore/contracts and are re-exported by implementing packages — never re-declared, never bridged with `as unknown as`. Protocol engines are injected via contracts interfaces (TlsHandshakeEngine is the reference). Time flows through the injected Clock. See .claude/code-standards.md §22.
+
 ## Memory System
 
 Location: `memory/` directory + SQLite DB at `.memory/browsercore.db`
