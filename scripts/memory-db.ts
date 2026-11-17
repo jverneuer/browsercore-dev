@@ -169,6 +169,58 @@ export async function createFact(
     ).run(params.id, params.statement, params.detail ?? "");
 }
 
+/**
+ * Insert a fact or refresh an existing one by id. Content fields and the FTS
+ * mirror are replaced; history fields (created_at, weight, verification_count)
+ * are preserved so re-running a work update never resets confidence history.
+ */
+export async function upsertFact(
+    db: Connection,
+    params: Parameters<typeof createFact>[1],
+): Promise<void> {
+    const stability = params.stability ?? "stable";
+    const now = Math.floor(Date.now() / 1000);
+
+    let embeddingJson: string | null = null;
+    try {
+        const embed = await getEmbedder();
+        const embedding = await embed(params.statement);
+        embeddingJson = JSON.stringify(Array.from(embedding));
+    } catch {
+        // Embedding optional
+    }
+
+    await db.prepare(`
+        INSERT INTO facts (id, scope, statement, stability, base_confidence, weight,
+                          coupling, detail, agents_must_know, created_at, updated_at,
+                          verification_count, embedding, embedding_model)
+        VALUES (?, ?, ?, ?, ?, 1.0, ?, ?, ?, ?, ?, 0, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            scope = excluded.scope,
+            statement = excluded.statement,
+            stability = excluded.stability,
+            base_confidence = excluded.base_confidence,
+            coupling = excluded.coupling,
+            detail = excluded.detail,
+            agents_must_know = excluded.agents_must_know,
+            updated_at = excluded.updated_at,
+            embedding = excluded.embedding,
+            embedding_model = excluded.embedding_model
+    `).run(
+        params.id, params.scope, params.statement, stability, params.base_confidence,
+        params.coupling ?? null, params.detail ?? null, params.agents_must_know ?? null,
+        now, now, embeddingJson,
+        embeddingJson ? "all-MiniLM-L6-v2" : null,
+    );
+
+    // Refresh the FTS mirror (plain table, so delete+insert; ON CONFLICT
+    // upserts are not available here).
+    await db.prepare("DELETE FROM facts_fts WHERE fact_id = ?").run(params.id);
+    await db.prepare(
+        "INSERT INTO facts_fts (fact_id, statement, detail) VALUES (?, ?, ?)",
+    ).run(params.id, params.statement, params.detail ?? "");
+}
+
 export async function getFact(db: Connection, id: string): Promise<FactRow | null> {
     const result = await db.prepare("SELECT * FROM facts WHERE id = ?").get(id);
     return (result as FactRow) ?? null;
