@@ -1,4 +1,4 @@
-import { getMemoryDb, ensureSchema, createFact, type Scope } from "./memory-db.ts";
+import { getMemoryDb, ensureSchema, upsertFact, type Scope } from "./memory-db.ts";
 
 async function main() {
     const db = await getMemoryDb();
@@ -36,7 +36,10 @@ async function main() {
 
     for (const fact of updates) {
         try {
-            await createFact(db, fact);
+            // upsert, not insert — these facts are re-asserted on every work
+            // update, so createFact's strict INSERT fails with
+            // "UNIQUE constraint failed: facts.id" once seeded.
+            await upsertFact(db, fact);
             console.log(`✓ ${fact.id}`);
         } catch (e) {
             console.log(`✗ ${fact.id}: ${e}`);
